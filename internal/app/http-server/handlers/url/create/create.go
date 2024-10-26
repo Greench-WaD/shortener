@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 func New(store *storage.Store) http.HandlerFunc {
@@ -14,7 +15,7 @@ func New(store *storage.Store) http.HandlerFunc {
 			http.Error(res, "Only POST method required", http.StatusBadRequest)
 			return
 		}
-		if req.Header.Get("Content-type") != "text/plain" {
+		if !strings.Contains(req.Header.Get("Content-type"), "text/plain") {
 			http.Error(res, "Only text/plain body required", http.StatusBadRequest)
 			return
 		}
