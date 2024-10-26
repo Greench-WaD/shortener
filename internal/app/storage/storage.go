@@ -16,7 +16,7 @@ func New() *Store {
 	return &Store{links: map[string]string{}}
 }
 
-func (s *Store) CreateUri(link string) string {
+func (s *Store) CreateURI(link string) string {
 	id := shortuuid.New()
 	s.links[id] = link
 	return id
