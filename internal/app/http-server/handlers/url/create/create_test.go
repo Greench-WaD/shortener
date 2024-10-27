@@ -107,7 +107,7 @@ func TestNew(t *testing.T) {
 			require.NoError(t, err)
 
 			if result.StatusCode == http.StatusCreated {
-				parseUrl, err := url.Parse(string(urlResult))
+				parseURL, err := url.Parse(string(urlResult))
 				require.NoError(t, err)
 
 				link, err := tt.args.store.GetLink(strings.ReplaceAll(parseUrl.Path, "/", ""))
