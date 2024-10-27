@@ -97,13 +97,12 @@ func TestNew(t *testing.T) {
 			h(w, r)
 
 			result := w.Result()
+			defer result.Body.Close()
 
 			assert.Equal(t, tt.want.code, result.StatusCode)
 			assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
 
 			urlResult, err := io.ReadAll(result.Body)
-			require.NoError(t, err)
-			err = result.Body.Close()
 			require.NoError(t, err)
 
 			if result.StatusCode == http.StatusCreated {
