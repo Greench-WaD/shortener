@@ -31,7 +31,7 @@ func New(store *storage.Store) http.HandlerFunc {
 		}
 		id := store.CreateURI(string(body))
 
-		res.Header().Set("content-type", "text/plain")
+		res.Header().Set("content-type", "text/plain; charset=utf-8")
 		res.WriteHeader(http.StatusCreated)
 
 		_, err = res.Write([]byte("http://localhost:8080/" + id))

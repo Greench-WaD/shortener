@@ -13,6 +13,10 @@ func New(store *storage.Store) http.HandlerFunc {
 			return
 		}
 		id := req.PathValue("id")
+		if id == "" {
+			http.Error(res, "Id parameter required", http.StatusBadRequest)
+			return
+		}
 		link, err := store.GetLink(id)
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
