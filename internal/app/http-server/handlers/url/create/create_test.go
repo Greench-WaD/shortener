@@ -2,9 +2,9 @@ package create
 
 import (
 	"github.com/Igorezka/shortener/internal/app/storage"
+	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -13,17 +13,19 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	type args struct {
-		store *storage.Store
-	}
 	type want struct {
 		code        int
 		contentType string
 		response    string
 	}
+
+	store := storage.New()
+	handler := New(store)
+	srv := httptest.NewServer(handler)
+	defer srv.Close()
+
 	tests := []struct {
 		name        string
-		args        args
 		want        want
 		method      string
 		request     string
@@ -32,9 +34,6 @@ func TestNew(t *testing.T) {
 	}{
 		{
 			name: "Positive",
-			args: args{
-				store: storage.New(),
-			},
 			want: want{
 				code:        http.StatusCreated,
 				contentType: "text/plain; charset=utf-8",
@@ -46,9 +45,6 @@ func TestNew(t *testing.T) {
 		},
 		{
 			name: "Negative Method not supported",
-			args: args{
-				store: storage.New(),
-			},
 			want: want{
 				code:        http.StatusBadRequest,
 				contentType: "text/plain; charset=utf-8",
@@ -60,9 +56,6 @@ func TestNew(t *testing.T) {
 		},
 		{
 			name: "Negative Content type not supported",
-			args: args{
-				store: storage.New(),
-			},
 			want: want{
 				code:        http.StatusBadRequest,
 				contentType: "text/plain; charset=utf-8",
@@ -74,9 +67,6 @@ func TestNew(t *testing.T) {
 		},
 		{
 			name: "Negative Invalid url",
-			args: args{
-				store: storage.New(),
-			},
 			want: want{
 				code:        http.StatusBadRequest,
 				contentType: "text/plain; charset=utf-8",
@@ -89,27 +79,21 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := httptest.NewRequest(tt.method, tt.request, strings.NewReader(tt.body))
-			r.Header.Add("Content-Type", tt.contentType)
-			w := httptest.NewRecorder()
-			h := New(tt.args.store)
+			req := resty.New().R().SetHeader("Content-Type", tt.contentType).SetBody(tt.body)
+			req.Method = tt.method
+			req.URL = srv.URL
 
-			h(w, r)
+			result, err := req.Send()
+			assert.NoError(t, err, "error making HTTP request")
 
-			result := w.Result()
-			defer result.Body.Close()
+			assert.Equal(t, tt.want.code, result.StatusCode())
+			assert.Equal(t, tt.want.contentType, result.Header().Get("Content-Type"))
 
-			assert.Equal(t, tt.want.code, result.StatusCode)
-			assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
-
-			urlResult, err := io.ReadAll(result.Body)
-			require.NoError(t, err)
-
-			if result.StatusCode == http.StatusCreated {
-				parseURL, err := url.Parse(string(urlResult))
+			if result.StatusCode() == http.StatusCreated {
+				parseURL, err := url.Parse(string(result.Body()))
 				require.NoError(t, err)
 
-				link, err := tt.args.store.GetLink(strings.ReplaceAll(parseURL.Path, "/", ""))
+				link, err := store.GetLink(strings.ReplaceAll(parseURL.Path, "/", ""))
 				assert.NoError(t, err)
 				assert.Equal(t, link, tt.body)
 			}

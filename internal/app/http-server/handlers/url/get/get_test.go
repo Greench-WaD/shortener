@@ -2,6 +2,7 @@ package get
 
 import (
 	"github.com/Igorezka/shortener/internal/app/storage"
+	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -9,28 +10,27 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	type args struct {
-		store *storage.Store
-	}
 	type want struct {
 		code        int
 		contentType string
 		location    string
 	}
+
+	store := storage.New()
+	mux := http.NewServeMux()
+	mux.HandleFunc(`/{id}`, New(store))
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
 	tests := []struct {
 		name       string
-		args       args
 		want       want
 		method     string
 		request    string
-		url        string
 		wantCreate bool
 	}{
 		{
 			name: "Positive",
-			args: args{
-				store: storage.New(),
-			},
 			want: want{
 				code:        http.StatusTemporaryRedirect,
 				contentType: "text/html; charset=utf-8",
@@ -38,14 +38,10 @@ func TestNew(t *testing.T) {
 			},
 			method:     http.MethodGet,
 			request:    "/",
-			url:        "https://ya.ru",
 			wantCreate: true,
 		},
 		{
 			name: "Negative Method not allowed",
-			args: args{
-				store: storage.New(),
-			},
 			want: want{
 				code:        http.StatusBadRequest,
 				contentType: "text/html; charset=utf-8",
@@ -53,14 +49,10 @@ func TestNew(t *testing.T) {
 			},
 			method:     http.MethodPost,
 			request:    "/",
-			url:        "https://ya.ru",
-			wantCreate: true,
+			wantCreate: false,
 		},
 		{
 			name: "Negative Link not found",
-			args: args{
-				store: storage.New(),
-			},
 			want: want{
 				code:        http.StatusBadRequest,
 				contentType: "text/html; charset=utf-8",
@@ -68,30 +60,26 @@ func TestNew(t *testing.T) {
 			},
 			method:     http.MethodGet,
 			request:    "/",
-			url:        "https://ya.ru",
 			wantCreate: false,
 		},
 	}
 	for _, tt := range tests {
-		id := ""
+		id := "asdasd"
 		if tt.wantCreate {
-			id = tt.args.store.CreateURI(tt.url)
+			id = store.CreateURI(tt.want.location)
 		}
 		t.Run(tt.name, func(t *testing.T) {
-			r := httptest.NewRequest(tt.method, tt.request+id, nil)
-			r.SetPathValue("id", id)
-			w := httptest.NewRecorder()
-			h := New(tt.args.store)
+			req := resty.New().SetRedirectPolicy(resty.NoRedirectPolicy()).R()
+			req.Method = tt.method
+			req.URL = srv.URL + "/" + id
 
-			h(w, r)
+			result, _ := req.Send()
+			assert.Equal(t, tt.want.code, result.StatusCode())
 
-			result := w.Result()
-			defer result.Body.Close()
-
-			assert.Equal(t, tt.want.code, result.StatusCode)
-			if result.StatusCode == http.StatusTemporaryRedirect {
-				assert.Equal(t, tt.want.location, result.Header.Get("Location"))
+			if result.StatusCode() == http.StatusTemporaryRedirect {
+				assert.Equal(t, tt.want.location, result.Header().Get("Location"))
 			}
 		})
+		store.ClearStore()
 	}
 }
