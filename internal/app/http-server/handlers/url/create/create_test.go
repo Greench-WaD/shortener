@@ -110,7 +110,7 @@ func TestNew(t *testing.T) {
 				parseURL, err := url.Parse(string(urlResult))
 				require.NoError(t, err)
 
-				link, err := tt.args.store.GetLink(strings.ReplaceAll(parseUrl.Path, "/", ""))
+				link, err := tt.args.store.GetLink(strings.ReplaceAll(parseURL.Path, "/", ""))
 				assert.NoError(t, err)
 				assert.Equal(t, link, tt.body)
 			}
