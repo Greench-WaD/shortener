@@ -2,7 +2,9 @@ package get
 
 import (
 	"github.com/Igorezka/shortener/internal/app/storage"
+	"github.com/Igorezka/shortener/internal/app/storage/memory"
 	"github.com/go-resty/resty/v2"
+	"github.com/lithammer/shortuuid"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -16,7 +18,7 @@ func TestNew(t *testing.T) {
 		location    string
 	}
 
-	store := storage.New()
+	store := storage.New(memory.New())
 	mux := http.NewServeMux()
 	mux.HandleFunc(`/{id}`, New(store))
 	srv := httptest.NewServer(mux)
@@ -45,7 +47,7 @@ func TestNew(t *testing.T) {
 			want: want{
 				code:        http.StatusBadRequest,
 				contentType: "text/html; charset=utf-8",
-				location:    "https://ya.ru",
+				location:    "https://tarkov.help",
 			},
 			method:     http.MethodPost,
 			request:    "/",
@@ -56,7 +58,7 @@ func TestNew(t *testing.T) {
 			want: want{
 				code:        http.StatusBadRequest,
 				contentType: "text/html; charset=utf-8",
-				location:    "https://ya.ru",
+				location:    "https://practicum.yandex.ru",
 			},
 			method:     http.MethodGet,
 			request:    "/",
@@ -64,9 +66,9 @@ func TestNew(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		id := "asdasd"
+		id := shortuuid.New()
 		if tt.wantCreate {
-			id = store.CreateURI(tt.want.location)
+			id = store.DB.CreateURI(tt.want.location)
 		}
 		t.Run(tt.name, func(t *testing.T) {
 			req := resty.New().SetRedirectPolicy(resty.NoRedirectPolicy()).R()
@@ -80,6 +82,5 @@ func TestNew(t *testing.T) {
 				assert.Equal(t, tt.want.location, result.Header().Get("Location"))
 			}
 		})
-		store.ClearStore()
 	}
 }

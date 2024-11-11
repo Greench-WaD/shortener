@@ -1,20 +1,16 @@
 package main
 
 import (
-	"github.com/Igorezka/shortener/internal/app/http-server/handlers/url/create"
-	"github.com/Igorezka/shortener/internal/app/http-server/handlers/url/get"
+	"github.com/Igorezka/shortener/internal/app/http-server/router"
 	"github.com/Igorezka/shortener/internal/app/storage"
+	"github.com/Igorezka/shortener/internal/app/storage/memory"
 	"net/http"
 )
 
 func main() {
-	store := storage.New()
+	store := storage.New(memory.New())
 
-	mux := http.NewServeMux()
-	mux.HandleFunc(`/`, create.New(store))
-	mux.HandleFunc(`/{id}`, get.New(store))
-
-	err := http.ListenAndServe(`localhost:8080`, mux)
+	err := http.ListenAndServe(`localhost:8080`, router.New(store))
 	if err != nil {
 		panic(err)
 	}

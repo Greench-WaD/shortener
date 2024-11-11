@@ -17,7 +17,7 @@ func New(store *storage.Store) http.HandlerFunc {
 			http.Error(res, "Id parameter required", http.StatusBadRequest)
 			return
 		}
-		link, err := store.GetLink(id)
+		link, err := store.DB.GetLink(id)
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
 				http.Error(res, "Link not found", http.StatusBadRequest)

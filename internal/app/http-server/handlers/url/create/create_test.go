@@ -2,6 +2,7 @@ package create
 
 import (
 	"github.com/Igorezka/shortener/internal/app/storage"
+	"github.com/Igorezka/shortener/internal/app/storage/memory"
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,7 +20,7 @@ func TestNew(t *testing.T) {
 		response    string
 	}
 
-	store := storage.New()
+	store := storage.New(memory.New())
 	handler := New(store)
 	srv := httptest.NewServer(handler)
 	defer srv.Close()
@@ -51,7 +52,7 @@ func TestNew(t *testing.T) {
 			},
 			method:      http.MethodGet,
 			request:     "/",
-			body:        "https://ya.ru",
+			body:        "https://tarkov.help",
 			contentType: "text/plain; charset=utf-8",
 		},
 		{
@@ -62,7 +63,7 @@ func TestNew(t *testing.T) {
 			},
 			method:      http.MethodPost,
 			request:     "/",
-			body:        "https://ya.ru",
+			body:        `{"url": "https://ya.ru"}`,
 			contentType: "application/json",
 		},
 		{
@@ -93,7 +94,7 @@ func TestNew(t *testing.T) {
 				parseURL, err := url.Parse(string(result.Body()))
 				require.NoError(t, err)
 
-				link, err := store.GetLink(strings.ReplaceAll(parseURL.Path, "/", ""))
+				link, err := store.DB.GetLink(strings.ReplaceAll(parseURL.Path, "/", ""))
 				assert.NoError(t, err)
 				assert.Equal(t, link, tt.body)
 			}
