@@ -1,6 +1,9 @@
 package config
 
-import "flag"
+import (
+	"flag"
+	"os"
+)
 
 type Config struct {
 	RunAddr string
@@ -9,15 +12,22 @@ type Config struct {
 
 func New() *Config {
 	config := &Config{
-		RunAddr: "localhost:8080",
-		BaseURL: "http://localhost:8080",
+		RunAddr: "",
+		BaseURL: "",
 	}
-	config.ParseFlags()
+	config.Parse()
 	return config
 }
 
-func (c *Config) ParseFlags() {
+func (c *Config) Parse() {
 	flag.StringVar(&c.RunAddr, "a", "localhost:8080", "address and port to run server")
 	flag.StringVar(&c.BaseURL, "b", "http://localhost:8080", "base url")
 	flag.Parse()
+
+	if envRunAddr := os.Getenv("SERVER_ADDRESS"); envRunAddr != "" {
+		c.RunAddr = envRunAddr
+	}
+	if envBaseURL := os.Getenv("BASE_URL"); envBaseURL != "" {
+		c.BaseURL = envBaseURL
+	}
 }
