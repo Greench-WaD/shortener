@@ -105,7 +105,7 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			url := srv.URL
-			if tt.req.method == http.MethodGet {
+			if tt.req.method == http.MethodGet && tt.want.code != http.StatusMethodNotAllowed {
 				id := shortuuid.New()
 				if tt.req.create {
 					id = store.DB.CreateURI(tt.req.url)
