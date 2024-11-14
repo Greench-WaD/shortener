@@ -2,13 +2,14 @@ package create
 
 import (
 	"fmt"
+	"github.com/Igorezka/shortener/internal/app/config"
 	"github.com/Igorezka/shortener/internal/app/storage"
 	"io"
 	"net/http"
 	"net/url"
 )
 
-func New(store *storage.Store) http.HandlerFunc {
+func New(cfg *config.Config, store *storage.Store) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		body, err := io.ReadAll(req.Body)
 		if err != nil {
@@ -29,7 +30,7 @@ func New(store *storage.Store) http.HandlerFunc {
 		res.Header().Set("content-type", "text/plain; charset=utf-8")
 		res.WriteHeader(http.StatusCreated)
 
-		_, err = res.Write([]byte("http://localhost:8080/" + id))
+		_, err = res.Write([]byte(cfg.BaseURL + id))
 		if err != nil {
 			fmt.Println(err)
 		}
