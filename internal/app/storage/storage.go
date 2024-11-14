@@ -2,35 +2,19 @@ package storage
 
 import (
 	"errors"
-	"fmt"
-	"github.com/lithammer/shortuuid"
 )
 
-var ErrNotFound = errors.New("not found")
+type Storage interface {
+	CreateURI(link string) string
+	GetLink(id string) (string, error)
+}
 
 type Store struct {
-	links map[string]string
+	DB Storage
 }
 
-func New() *Store {
-	return &Store{links: map[string]string{}}
+func New(storage Storage) *Store {
+	return &Store{DB: storage}
 }
 
-func (s *Store) ClearStore() {
-	s.links = map[string]string{}
-}
-
-func (s *Store) CreateURI(link string) string {
-	id := shortuuid.New()
-	s.links[id] = link
-	return id
-}
-
-func (s *Store) GetLink(id string) (string, error) {
-	const op = "storage.GetLink"
-	link, ok := s.links[id]
-	if !ok {
-		return "", fmt.Errorf("%s: %w", op, ErrNotFound)
-	}
-	return link, nil
-}
+var ErrNotFound = errors.New("not found")

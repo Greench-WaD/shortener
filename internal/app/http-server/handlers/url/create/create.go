@@ -6,22 +6,17 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 )
 
 func New(store *storage.Store) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		if req.Method != http.MethodPost {
-			http.Error(res, "Only POST method required", http.StatusBadRequest)
-			return
-		}
-		if !strings.Contains(req.Header.Get("Content-type"), "text/plain") {
-			http.Error(res, "Only text/plain body required", http.StatusBadRequest)
-			return
-		}
 		body, err := io.ReadAll(req.Body)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if len(string(body)) <= 0 {
+			http.Error(res, "URI required", http.StatusBadRequest)
 			return
 		}
 		_, err = url.ParseRequestURI(string(body))
@@ -29,7 +24,7 @@ func New(store *storage.Store) http.HandlerFunc {
 			http.Error(res, "Only valid URI required", http.StatusBadRequest)
 			return
 		}
-		id := store.CreateURI(string(body))
+		id := store.DB.CreateURI(string(body))
 
 		res.Header().Set("content-type", "text/plain; charset=utf-8")
 		res.WriteHeader(http.StatusCreated)

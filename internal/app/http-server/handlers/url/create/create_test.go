@@ -2,6 +2,7 @@ package create
 
 import (
 	"github.com/Igorezka/shortener/internal/app/storage"
+	"github.com/Igorezka/shortener/internal/app/storage/memory"
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,10 +17,9 @@ func TestNew(t *testing.T) {
 	type want struct {
 		code        int
 		contentType string
-		response    string
 	}
 
-	store := storage.New()
+	store := storage.New(memory.New())
 	handler := New(store)
 	srv := httptest.NewServer(handler)
 	defer srv.Close()
@@ -44,26 +44,15 @@ func TestNew(t *testing.T) {
 			contentType: "text/plain; charset=utf-8",
 		},
 		{
-			name: "Negative Method not supported",
+			name: "Negative URI required",
 			want: want{
 				code:        http.StatusBadRequest,
 				contentType: "text/plain; charset=utf-8",
 			},
 			method:      http.MethodGet,
 			request:     "/",
-			body:        "https://ya.ru",
+			body:        "",
 			contentType: "text/plain; charset=utf-8",
-		},
-		{
-			name: "Negative Content type not supported",
-			want: want{
-				code:        http.StatusBadRequest,
-				contentType: "text/plain; charset=utf-8",
-			},
-			method:      http.MethodPost,
-			request:     "/",
-			body:        "https://ya.ru",
-			contentType: "application/json",
 		},
 		{
 			name: "Negative Invalid url",
@@ -93,7 +82,7 @@ func TestNew(t *testing.T) {
 				parseURL, err := url.Parse(string(result.Body()))
 				require.NoError(t, err)
 
-				link, err := store.GetLink(strings.ReplaceAll(parseURL.Path, "/", ""))
+				link, err := store.DB.GetLink(strings.ReplaceAll(parseURL.Path, "/", ""))
 				assert.NoError(t, err)
 				assert.Equal(t, link, tt.body)
 			}
