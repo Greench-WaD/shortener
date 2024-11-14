@@ -8,10 +8,6 @@ import (
 
 func New(store *storage.Store) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		if req.Method != http.MethodGet {
-			http.Error(res, "Only Get method required", http.StatusBadRequest)
-			return
-		}
 		id := req.PathValue("id")
 		if id == "" {
 			http.Error(res, "Id parameter required", http.StatusBadRequest)

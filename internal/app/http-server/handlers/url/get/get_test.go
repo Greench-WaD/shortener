@@ -43,17 +43,6 @@ func TestNew(t *testing.T) {
 			wantCreate: true,
 		},
 		{
-			name: "Negative Method not allowed",
-			want: want{
-				code:        http.StatusBadRequest,
-				contentType: "text/html; charset=utf-8",
-				location:    "https://tarkov.help",
-			},
-			method:     http.MethodPost,
-			request:    "/",
-			wantCreate: false,
-		},
-		{
 			name: "Negative Link not found",
 			want: want{
 				code:        http.StatusBadRequest,

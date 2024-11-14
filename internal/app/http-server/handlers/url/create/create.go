@@ -15,6 +15,10 @@ func New(store *storage.Store) http.HandlerFunc {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		if len(string(body)) <= 0 {
+			http.Error(res, "URI required", http.StatusBadRequest)
+			return
+		}
 		_, err = url.ParseRequestURI(string(body))
 		if err != nil {
 			http.Error(res, "Only valid URI required", http.StatusBadRequest)

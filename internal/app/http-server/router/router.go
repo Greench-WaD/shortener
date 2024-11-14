@@ -11,12 +11,11 @@ import (
 func New(store *storage.Store) chi.Router {
 	r := chi.NewRouter()
 
+	r.Get("/{id}", get.New(store))
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.AllowContentType("text/plain"))
 		r.Post("/", create.New(store))
 	})
-
-	r.Get("/{id}", get.New(store))
 
 	return r
 }

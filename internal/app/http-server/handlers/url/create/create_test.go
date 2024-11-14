@@ -17,7 +17,6 @@ func TestNew(t *testing.T) {
 	type want struct {
 		code        int
 		contentType string
-		response    string
 	}
 
 	store := storage.New(memory.New())
@@ -45,26 +44,15 @@ func TestNew(t *testing.T) {
 			contentType: "text/plain; charset=utf-8",
 		},
 		{
-			name: "Negative Method not supported",
+			name: "Negative URI required",
 			want: want{
 				code:        http.StatusBadRequest,
 				contentType: "text/plain; charset=utf-8",
 			},
 			method:      http.MethodGet,
 			request:     "/",
-			body:        "https://tarkov.help",
+			body:        "",
 			contentType: "text/plain; charset=utf-8",
-		},
-		{
-			name: "Negative Content type not supported",
-			want: want{
-				code:        http.StatusBadRequest,
-				contentType: "text/plain; charset=utf-8",
-			},
-			method:      http.MethodPost,
-			request:     "/",
-			body:        `{"url": "https://ya.ru"}`,
-			contentType: "application/json",
 		},
 		{
 			name: "Negative Invalid url",
