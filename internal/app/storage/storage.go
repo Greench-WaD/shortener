@@ -1,8 +1,8 @@
 package storage
 
-import (
-	"errors"
-)
+import "errors"
+
+var ErrNotFound = errors.New("not found")
 
 type Storage interface {
 	CreateURI(link string) string
@@ -16,5 +16,3 @@ type Store struct {
 func New(storage Storage) *Store {
 	return &Store{DB: storage}
 }
-
-var ErrNotFound = errors.New("not found")

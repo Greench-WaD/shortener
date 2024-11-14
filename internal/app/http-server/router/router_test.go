@@ -2,6 +2,7 @@ package router
 
 import (
 	"errors"
+	"github.com/Igorezka/shortener/internal/app/config"
 	"github.com/Igorezka/shortener/internal/app/storage"
 	"github.com/Igorezka/shortener/internal/app/storage/memory"
 	"github.com/brianvoe/gofakeit/v7"
@@ -27,7 +28,8 @@ func TestNew(t *testing.T) {
 	}
 
 	store := storage.New(memory.New())
-	router := New(store)
+	cfg := config.New()
+	router := New(cfg, store)
 	srv := httptest.NewServer(router)
 	defer srv.Close()
 

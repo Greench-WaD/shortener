@@ -1,6 +1,7 @@
 package create
 
 import (
+	"github.com/Igorezka/shortener/internal/app/config"
 	"github.com/Igorezka/shortener/internal/app/storage"
 	"github.com/Igorezka/shortener/internal/app/storage/memory"
 	"github.com/go-resty/resty/v2"
@@ -20,7 +21,8 @@ func TestNew(t *testing.T) {
 	}
 
 	store := storage.New(memory.New())
-	handler := New(store)
+	cfg := config.New()
+	handler := New(cfg, store)
 	srv := httptest.NewServer(handler)
 	defer srv.Close()
 
