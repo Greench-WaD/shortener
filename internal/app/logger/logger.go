@@ -5,7 +5,6 @@ import (
 )
 
 func New(level string) (*zap.Logger, error) {
-	log := zap.NewNop()
 	lvl, err := zap.ParseAtomicLevel(level)
 	if err != nil {
 		return nil, err
@@ -19,6 +18,6 @@ func New(level string) (*zap.Logger, error) {
 		return nil, err
 	}
 
-	log = zl
+	log := zl
 	return log, nil
 }
