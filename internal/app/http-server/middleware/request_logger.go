@@ -42,7 +42,7 @@ func RequestLogger(logger *zap.Logger) func(next http.Handler) http.Handler {
 				responseData:   responseData,
 			}
 			next.ServeHTTP(&lw, r)
-			logger.Info("got incoming HTTP request",
+			logger.Info("HTTP request",
 				zap.String("method", r.Method),
 				zap.String("path", r.URL.Path),
 				zap.String("duration", time.Since(start).String()),

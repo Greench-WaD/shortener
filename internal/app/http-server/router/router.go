@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/Igorezka/shortener/internal/app/config"
 	"github.com/Igorezka/shortener/internal/app/http-server/handlers/url/create"
+	"github.com/Igorezka/shortener/internal/app/http-server/handlers/url/create_json"
 	"github.com/Igorezka/shortener/internal/app/http-server/handlers/url/get"
 	mw "github.com/Igorezka/shortener/internal/app/http-server/middleware"
 	"github.com/Igorezka/shortener/internal/app/storage"
@@ -11,6 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// New TODO: убрать жесткую привязку к chi
 func New(cfg *config.Config, store *storage.Store, log *zap.Logger) chi.Router {
 	r := chi.NewRouter()
 	r.Group(func(r chi.Router) {
@@ -19,6 +21,10 @@ func New(cfg *config.Config, store *storage.Store, log *zap.Logger) chi.Router {
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AllowContentType("text/plain"))
 			r.Post("/", create.New(cfg, store))
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.AllowContentType("application/json"))
+			r.Post("/api/shorten", create_json.New(cfg, store))
 		})
 	})
 
