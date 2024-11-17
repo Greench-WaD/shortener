@@ -1,9 +1,12 @@
 package create_json
 
 import (
-	"encoding/json"
 	"github.com/Igorezka/shortener/internal/app/config"
+	resp "github.com/Igorezka/shortener/internal/app/lib/api/response"
 	"github.com/Igorezka/shortener/internal/app/storage"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/render"
+	"go.uber.org/zap"
 	"net/http"
 	"net/url"
 )
@@ -13,40 +16,47 @@ type Request struct {
 }
 
 type Response struct {
+	resp.Response
 	Result string `json:"result"`
 }
 
-func New(cfg *config.Config, store *storage.Store) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		var r Request
-		dec := json.NewDecoder(req.Body)
-		if err := dec.Decode(&r); err != nil {
-			res.WriteHeader(http.StatusInternalServerError)
+func New(log *zap.Logger, cfg *config.Config, store *storage.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		const op = "handlers.url.create_json.New"
+		log = log.With(
+			zap.String("op", op),
+			zap.String("request_id", middleware.GetReqID(r.Context())),
+		)
+
+		var req Request
+		err := render.DecodeJSON(r.Body, &req)
+		if err != nil {
+			log.Error("failed to decode request", zap.String("error", err.Error()))
+			render.Status(r, http.StatusBadRequest)
+			render.JSON(w, r, resp.Error("internal server error"))
 			return
 		}
 
-		if len(r.URL) <= 0 {
-			res.WriteHeader(http.StatusBadRequest)
+		if len(req.URL) <= 0 {
+			log.Info("url field required")
+			render.Status(r, http.StatusBadRequest)
+			render.JSON(w, r, resp.Error("url required"))
 			return
 		}
 
-		if _, err := url.ParseRequestURI(r.URL); err != nil {
-			res.WriteHeader(http.StatusBadRequest)
+		if _, err := url.ParseRequestURI(req.URL); err != nil {
+			log.Info("invalid url", zap.String("url", req.URL))
+			render.Status(r, http.StatusBadRequest)
+			render.JSON(w, r, resp.Error("only valid url required"))
 			return
 		}
 
-		id := store.DB.CreateURI(r.URL)
+		id := store.DB.CreateURI(req.URL)
 
-		resp := Response{
-			Result: cfg.BaseURL + "/" + id,
-		}
-
-		res.Header().Set("Content-Type", "application/json; charset=utf-8")
-		res.WriteHeader(http.StatusCreated)
-
-		enc := json.NewEncoder(res)
-		if err := enc.Encode(resp); err != nil {
-			return
-		}
+		render.Status(r, http.StatusCreated)
+		render.JSON(w, r, Response{
+			Response: resp.OK(),
+			Result:   cfg.BaseURL + "/" + id,
+		})
 	}
 }

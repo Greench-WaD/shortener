@@ -13,9 +13,10 @@ import (
 )
 
 // New TODO: убрать жесткую привязку к chi
-func New(cfg *config.Config, store *storage.Store, log *zap.Logger) chi.Router {
+func New(log *zap.Logger, cfg *config.Config, store *storage.Store) chi.Router {
 	r := chi.NewRouter()
 	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequestID)
 		r.Use(mw.RequestLogger(log))
 		r.Get("/{id}", get.New(store))
 		r.Group(func(r chi.Router) {
@@ -24,7 +25,7 @@ func New(cfg *config.Config, store *storage.Store, log *zap.Logger) chi.Router {
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AllowContentType("application/json"))
-			r.Post("/api/shorten", create_json.New(cfg, store))
+			r.Post("/api/shorten", create_json.New(log, cfg, store))
 		})
 	})
 

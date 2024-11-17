@@ -31,7 +31,7 @@ func TestNew(t *testing.T) {
 	store := storage.New(memory.New())
 	log, _ := logger.New("Info")
 	cfg := config.New()
-	router := New(cfg, store, log)
+	router := New(log, cfg, store)
 	srv := httptest.NewServer(router)
 	defer srv.Close()
 
