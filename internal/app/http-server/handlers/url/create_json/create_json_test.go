@@ -1,4 +1,4 @@
-package create_json
+package createj
 
 import (
 	"encoding/json"

@@ -1,4 +1,4 @@
-package create_json
+package createj
 
 import (
 	"github.com/Igorezka/shortener/internal/app/config"

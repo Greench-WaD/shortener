@@ -3,7 +3,7 @@ package router
 import (
 	"github.com/Igorezka/shortener/internal/app/config"
 	"github.com/Igorezka/shortener/internal/app/http-server/handlers/url/create"
-	"github.com/Igorezka/shortener/internal/app/http-server/handlers/url/create_json"
+	createj "github.com/Igorezka/shortener/internal/app/http-server/handlers/url/create_json"
 	"github.com/Igorezka/shortener/internal/app/http-server/handlers/url/get"
 	mw "github.com/Igorezka/shortener/internal/app/http-server/middleware"
 	"github.com/Igorezka/shortener/internal/app/storage"
@@ -25,7 +25,7 @@ func New(log *zap.Logger, cfg *config.Config, store *storage.Store) chi.Router {
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AllowContentType("application/json"))
-			r.Post("/api/shorten", create_json.New(log, cfg, store))
+			r.Post("/api/shorten", createj.New(log, cfg, store))
 		})
 	})
 
