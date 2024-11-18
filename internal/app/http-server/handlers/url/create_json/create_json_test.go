@@ -58,6 +58,48 @@ func TestNew(t *testing.T) {
 				contentType: "application/json",
 			},
 		},
+		{
+			name: "Negative failed to decode json",
+			want: want{
+				code:        http.StatusBadRequest,
+				link:        "https://ya.ru",
+				contentType: "application/json",
+			},
+			request: request{
+				method:      http.MethodPost,
+				url:         srv.URL + "/api/shorten",
+				body:        `{"url":"https://ya.ru}`,
+				contentType: "application/json",
+			},
+		},
+		{
+			name: "Negative url field required",
+			want: want{
+				code:        http.StatusBadRequest,
+				link:        "https://ya.ru",
+				contentType: "application/json",
+			},
+			request: request{
+				method:      http.MethodPost,
+				url:         srv.URL + "/api/shorten",
+				body:        `{"link":"https://ya.ru"}`,
+				contentType: "application/json",
+			},
+		},
+		{
+			name: "Negative invalid url",
+			want: want{
+				code:        http.StatusBadRequest,
+				link:        "https://ya.ru",
+				contentType: "application/json",
+			},
+			request: request{
+				method:      http.MethodPost,
+				url:         srv.URL + "/api/shorten",
+				body:        `{"url":"httpsyaru"}`,
+				contentType: "application/json",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

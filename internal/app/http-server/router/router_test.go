@@ -22,6 +22,7 @@ func TestNew(t *testing.T) {
 		response    string
 	}
 	type req struct {
+		srvURL      string
 		method      string
 		contentType string
 		url         string
@@ -47,6 +48,7 @@ func TestNew(t *testing.T) {
 				contentType: "text/plain; charset=utf-8",
 			},
 			req: req{
+				srvURL:      srv.URL,
 				method:      http.MethodPost,
 				contentType: "text/plain; charset=utf-8",
 				url:         gofakeit.URL(),
@@ -60,6 +62,7 @@ func TestNew(t *testing.T) {
 				contentType: "",
 			},
 			req: req{
+				srvURL:      srv.URL,
 				method:      http.MethodGet,
 				contentType: "text/plain; charset=utf-8",
 				url:         gofakeit.URL(),
@@ -73,6 +76,7 @@ func TestNew(t *testing.T) {
 				contentType: "",
 			},
 			req: req{
+				srvURL:      srv.URL,
 				method:      http.MethodPost,
 				contentType: "application/json; charset=utf-8",
 				url:         "{'url':'https://ya.ru'}",
@@ -86,6 +90,7 @@ func TestNew(t *testing.T) {
 				contentType: "text/html; charset=utf-8",
 			},
 			req: req{
+				srvURL:      srv.URL,
 				method:      http.MethodGet,
 				contentType: "application/json; charset=utf-8",
 				url:         gofakeit.URL(),
@@ -99,27 +104,69 @@ func TestNew(t *testing.T) {
 				contentType: "text/plain; charset=utf-8",
 			},
 			req: req{
+				srvURL:      srv.URL,
 				method:      http.MethodGet,
 				contentType: "application/json; charset=utf-8",
 				url:         gofakeit.URL(),
 				create:      false,
 			},
 		},
+		{
+			name: "Positive create json",
+			want: want{
+				code:        http.StatusCreated,
+				contentType: "application/json",
+			},
+			req: req{
+				srvURL:      srv.URL + "/api/shorten",
+				method:      http.MethodPost,
+				contentType: "application/json",
+				url:         `{"url":"https://ya.ru"}`,
+				create:      false,
+			},
+		},
+		{
+			name: "Negative create json invalid method",
+			want: want{
+				code:        http.StatusMethodNotAllowed,
+				contentType: "",
+			},
+			req: req{
+				srvURL:      srv.URL + "/api/shorten",
+				method:      http.MethodGet,
+				contentType: "application/json",
+				url:         `{"url":"https://ya.ru"}`,
+				create:      false,
+			},
+		},
+		{
+			name: "Negative create json invalid content/type",
+			want: want{
+				code:        http.StatusUnsupportedMediaType,
+				contentType: "",
+			},
+			req: req{
+				srvURL:      srv.URL + "/api/shorten",
+				method:      http.MethodPost,
+				contentType: "text/plain; charset=utf-8",
+				url:         `{"url":"https://ya.ru"}`,
+				create:      false,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			url := srv.URL
 			if tt.req.method == http.MethodGet && tt.want.code != http.StatusMethodNotAllowed {
 				id := shortuuid.New()
 				if tt.req.create {
 					id = store.DB.CreateURI(tt.req.url)
 				}
-				url += "/" + id
+				tt.req.srvURL += "/" + id
 			}
 
 			req := resty.New().SetRedirectPolicy(resty.NoRedirectPolicy()).R().SetHeader("Content-Type", tt.req.contentType).SetBody(tt.req.url)
 			req.Method = tt.req.method
-			req.URL = url
+			req.URL = tt.req.srvURL
 
 			result, err := req.Send()
 			if !errors.Is(err, resty.ErrAutoRedirectDisabled) {
