@@ -164,7 +164,7 @@ func TestNew(t *testing.T) {
 				tt.req.srvURL += "/" + id
 			}
 
-			req := resty.New().SetRedirectPolicy(resty.NoRedirectPolicy()).R().SetHeader("Content-Type", tt.req.contentType).SetBody(tt.req.url)
+			req := resty.New().SetRedirectPolicy(resty.NoRedirectPolicy()).R().SetHeader("Content-Type", tt.req.contentType).SetHeader("Accept-Encoding", "gzip").SetBody(tt.req.url)
 			req.Method = tt.req.method
 			req.URL = tt.req.srvURL
 

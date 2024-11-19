@@ -39,7 +39,7 @@ func RequestLogger(logger *zap.Logger) func(next http.Handler) http.Handler {
 				size:   0,
 			}
 			lw := loggingResponseWriter{
-				ResponseWriter: w, // встраиваем оригинальный http.ResponseWriter
+				ResponseWriter: w,
 				responseData:   responseData,
 			}
 			next.ServeHTTP(&lw, r)

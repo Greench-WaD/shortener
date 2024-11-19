@@ -18,6 +18,7 @@ func New(log *zap.Logger, cfg *config.Config, store *storage.Store) chi.Router {
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequestID)
 		r.Use(mw.RequestLogger(log))
+		r.Use(mw.GzipMiddleware)
 		r.Get("/{id}", get.New(store))
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AllowContentType("text/plain"))
