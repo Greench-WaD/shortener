@@ -21,7 +21,7 @@ func New(log *zap.Logger, cfg *config.Config, store *storage.Store) chi.Router {
 		r.Use(mw.GzipMiddleware)
 		r.Get("/{id}", get.New(store))
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.AllowContentType("text/plain"))
+			r.Use(middleware.AllowContentType("text/plain", "application/x-gzip"))
 			r.Post("/", create.New(cfg, store))
 		})
 		r.Group(func(r chi.Router) {
