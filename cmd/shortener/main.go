@@ -16,9 +16,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer func(log *zap.Logger) {
-		_ = log.Sync()
-	}(log)
+	defer log.Sync()
 	store := storage.New(memory.New())
 
 	log.Info(
