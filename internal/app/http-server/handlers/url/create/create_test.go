@@ -19,8 +19,8 @@ func TestNew(t *testing.T) {
 		code        int
 		contentType string
 	}
-
-	store := storage.New(memory.New())
+	mem, _ := memory.New("")
+	store := storage.New(mem)
 	cfg := config.New()
 	handler := New(cfg, store)
 	srv := httptest.NewServer(handler)
@@ -83,7 +83,6 @@ func TestNew(t *testing.T) {
 			if result.StatusCode() == http.StatusCreated {
 				parseURL, err := url.Parse(string(result.Body()))
 				require.NoError(t, err)
-
 				link, err := store.DB.GetLink(strings.ReplaceAll(parseURL.Path, "/", ""))
 				assert.NoError(t, err)
 				assert.Equal(t, link, tt.body)

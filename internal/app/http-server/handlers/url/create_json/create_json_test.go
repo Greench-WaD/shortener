@@ -28,8 +28,8 @@ func TestNew(t *testing.T) {
 		body        string
 		contentType string
 	}
-
-	store := storage.New(memory.New())
+	mem, _ := memory.New("")
+	store := storage.New(mem)
 	cfg := config.New()
 	log, _ := logger.New(cfg.LogLevel)
 	handler := New(log, cfg, store)

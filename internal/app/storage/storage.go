@@ -2,10 +2,13 @@ package storage
 
 import "errors"
 
-var ErrNotFound = errors.New("not found")
+var (
+	ErrNotFound   = errors.New("not found")
+	ErrCreateLink = errors.New("failed to create link")
+)
 
 type Storage interface {
-	CreateURI(link string) string
+	CreateURI(link string) (string, error)
 	GetLink(id string) (string, error)
 }
 

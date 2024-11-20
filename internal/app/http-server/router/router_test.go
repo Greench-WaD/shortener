@@ -28,8 +28,8 @@ func TestNew(t *testing.T) {
 		url         string
 		create      bool
 	}
-
-	store := storage.New(memory.New())
+	mem, _ := memory.New("")
+	store := storage.New(mem)
 	log, _ := logger.New("Info")
 	cfg := config.New()
 	router := New(log, cfg, store)
@@ -159,7 +159,7 @@ func TestNew(t *testing.T) {
 			if tt.req.method == http.MethodGet && tt.want.code != http.StatusMethodNotAllowed {
 				id := shortuuid.New()
 				if tt.req.create {
-					id = store.DB.CreateURI(tt.req.url)
+					id, _ = store.DB.CreateURI(tt.req.url)
 				}
 				tt.req.srvURL += "/" + id
 			}

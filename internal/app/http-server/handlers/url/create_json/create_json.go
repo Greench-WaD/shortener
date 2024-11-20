@@ -51,7 +51,13 @@ func New(log *zap.Logger, cfg *config.Config, store *storage.Store) http.Handler
 			return
 		}
 
-		id := store.DB.CreateURI(req.URL)
+		id, err := store.DB.CreateURI(req.URL)
+		if err != nil {
+			log.Error("failed to store link", zap.String("error", err.Error()))
+			resp.Status(r, http.StatusInternalServerError)
+			resp.JSON(w, r, resp.Error("internal server error"))
+			return
+		}
 
 		resp.Status(r, http.StatusCreated)
 		resp.JSON(w, r, Response{

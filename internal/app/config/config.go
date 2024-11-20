@@ -6,16 +6,18 @@ import (
 )
 
 type Config struct {
-	RunAddr  string
-	BaseURL  string
-	LogLevel string
+	RunAddr         string
+	BaseURL         string
+	LogLevel        string
+	FileStoragePath string
 }
 
 func New() *Config {
 	config := &Config{
-		RunAddr:  "",
-		BaseURL:  "",
-		LogLevel: "",
+		RunAddr:         "",
+		BaseURL:         "",
+		LogLevel:        "",
+		FileStoragePath: "/tmp/short-url-db.json",
 	}
 	config.Parse()
 	return config
@@ -25,15 +27,19 @@ func (c *Config) Parse() {
 	flag.StringVar(&c.RunAddr, "a", "localhost:8080", "address and port to run server")
 	flag.StringVar(&c.BaseURL, "b", "http://localhost:8080", "base url")
 	flag.StringVar(&c.LogLevel, "l", "Info", "log level")
+	flag.StringVar(&c.FileStoragePath, "f", "/tmp/short-url-db.json", "db file path")
 	flag.Parse()
 
-	if envRunAddr := os.Getenv("SERVER_ADDRESS"); envRunAddr != "" {
+	if envRunAddr, ok := os.LookupEnv("SERVER_ADDRESS"); ok {
 		c.RunAddr = envRunAddr
 	}
-	if envBaseURL := os.Getenv("BASE_URL"); envBaseURL != "" {
+	if envBaseURL, ok := os.LookupEnv("BASE_URL"); ok {
 		c.BaseURL = envBaseURL
 	}
-	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
+	if envLogLevel, ok := os.LookupEnv("LOG_LEVEL"); ok {
 		c.LogLevel = envLogLevel
+	}
+	if envFileStoragePath, ok := os.LookupEnv("FILE_STORAGE_PATH"); ok {
+		c.FileStoragePath = envFileStoragePath
 	}
 }
