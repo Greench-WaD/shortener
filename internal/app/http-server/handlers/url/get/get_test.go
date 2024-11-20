@@ -17,8 +17,8 @@ func TestNew(t *testing.T) {
 		contentType string
 		location    string
 	}
-
-	store := storage.New(memory.New())
+	mem, _ := memory.New("tt.txt")
+	store := storage.New(mem)
 	mux := http.NewServeMux()
 	mux.HandleFunc(`/{id}`, New(store))
 	srv := httptest.NewServer(mux)
@@ -57,7 +57,7 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		id := shortuuid.New()
 		if tt.wantCreate {
-			id = store.DB.CreateURI(tt.want.location)
+			id, _ = store.DB.CreateURI(tt.want.location)
 		}
 		t.Run(tt.name, func(t *testing.T) {
 			req := resty.New().SetRedirectPolicy(resty.NoRedirectPolicy()).R()

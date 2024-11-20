@@ -17,7 +17,12 @@ func main() {
 		panic(err)
 	}
 	defer log.Sync()
-	store := storage.New(memory.New())
+	m, err := memory.New(cfg.FileStoragePath)
+	if err != nil {
+		panic(err)
+	}
+	defer m.Close()
+	store := storage.New(m)
 
 	log.Info(
 		"starting server",

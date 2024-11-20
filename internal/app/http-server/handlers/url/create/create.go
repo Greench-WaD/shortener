@@ -26,7 +26,12 @@ func New(cfg *config.Config, store *storage.Store) http.HandlerFunc {
 			http.Error(res, "Only valid URI required", http.StatusBadRequest)
 			return
 		}
-		id := store.DB.CreateURI(string(body))
+
+		id, err := store.DB.CreateURI(string(body))
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		res.Header().Set("content-type", "text/plain; charset=utf-8")
 		res.WriteHeader(http.StatusCreated)
