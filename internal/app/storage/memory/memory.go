@@ -12,7 +12,7 @@ import (
 )
 
 type Link struct {
-	Uuid        string `json:"uuid"`
+	UUID        string `json:"uuid"`
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
 }
@@ -77,7 +77,7 @@ func (s *Storage) CreateURI(link string) (string, error) {
 	const op = "storage.memory.CreateURI"
 	id := shortuuid.New()
 	l := Link{
-		Uuid:        strconv.Itoa(s.pointer),
+		UUID:        strconv.Itoa(s.pointer),
 		ShortURL:    id,
 		OriginalURL: link,
 	}
