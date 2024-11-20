@@ -17,7 +17,7 @@ func TestNew(t *testing.T) {
 		contentType string
 		location    string
 	}
-	mem, _ := memory.New("tt.txt")
+	mem, _ := memory.New("")
 	store := storage.New(mem)
 	mux := http.NewServeMux()
 	mux.HandleFunc(`/{id}`, New(store))

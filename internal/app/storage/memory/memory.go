@@ -29,7 +29,10 @@ func (s *Storage) CreateEncoder(file *os.File) {
 }
 
 func (s *Storage) Close() error {
-	return s.file.Close()
+	if s.file != nil {
+		return s.file.Close()
+	}
+	return nil
 }
 
 func New(fileName string) (*Storage, error) {
@@ -91,7 +94,7 @@ func (s *Storage) CreateURI(link string) (string, error) {
 
 func (s *Storage) GetLink(id string) (string, error) {
 	const op = "storage.memory.GetLink"
-	idx := slices.IndexFunc(s.links, func(l Link) bool { return l.Uuid == id })
+	idx := slices.IndexFunc(s.links, func(l Link) bool { return l.ShortURL == id })
 	if idx == -1 {
 		return "", fmt.Errorf("%s: %w", op, storage.ErrNotFound)
 	}

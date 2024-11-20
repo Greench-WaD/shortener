@@ -28,8 +28,7 @@ func TestNew(t *testing.T) {
 		url         string
 		create      bool
 	}
-	mem, _ := memory.New("tt.txt")
-	defer mem.Close()
+	mem, _ := memory.New("")
 	store := storage.New(mem)
 	log, _ := logger.New("Info")
 	cfg := config.New()
