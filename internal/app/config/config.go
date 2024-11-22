@@ -10,6 +10,7 @@ type Config struct {
 	BaseURL         string
 	LogLevel        string
 	FileStoragePath string
+	DatabaseDSN     string
 }
 
 func New() *Config {
@@ -17,7 +18,8 @@ func New() *Config {
 		RunAddr:         "",
 		BaseURL:         "",
 		LogLevel:        "",
-		FileStoragePath: "/tmp/short-url-db.json",
+		FileStoragePath: "",
+		DatabaseDSN:     "",
 	}
 	config.Parse()
 	return config
@@ -28,6 +30,7 @@ func (c *Config) Parse() {
 	flag.StringVar(&c.BaseURL, "b", "http://localhost:8080", "base url")
 	flag.StringVar(&c.LogLevel, "l", "Info", "log level")
 	flag.StringVar(&c.FileStoragePath, "f", "/tmp/short-url-db.json", "db file path")
+	flag.StringVar(&c.DatabaseDSN, "d", "host=localhost user=shortener password=shortener dbname=shortener sslmode=disable", "db dsn")
 	flag.Parse()
 
 	if envRunAddr, ok := os.LookupEnv("SERVER_ADDRESS"); ok {
@@ -41,5 +44,8 @@ func (c *Config) Parse() {
 	}
 	if envFileStoragePath, ok := os.LookupEnv("FILE_STORAGE_PATH"); ok {
 		c.FileStoragePath = envFileStoragePath
+	}
+	if envDatabaseDSN, ok := os.LookupEnv("DATABASE_DSN"); ok {
+		c.FileStoragePath = envDatabaseDSN
 	}
 }

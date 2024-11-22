@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/Igorezka/shortener/internal/app/storage"
@@ -36,6 +37,7 @@ func (s *Storage) Close() error {
 }
 
 func New(fileName string) (*Storage, error) {
+	const op = "storage.memory.New"
 	s := &Storage{
 		file:    nil,
 		encoder: nil,
@@ -45,17 +47,18 @@ func New(fileName string) (*Storage, error) {
 	if len(fileName) > 0 {
 		dir, err := filepath.Abs(filepath.Dir(fileName))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", op, err)
 		}
+
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			err := os.Mkdir(dir, 0666)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%s: %w", op, err)
 			}
 		}
 		file, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		s.file = file
 		s.CreateEncoder(file)
@@ -63,7 +66,7 @@ func New(fileName string) (*Storage, error) {
 		for decoder.More() {
 			link := Link{}
 			if err := decoder.Decode(&link); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%s: %w", op, err)
 			}
 			s.links = append(s.links, link)
 			s.pointer += 1
@@ -73,8 +76,8 @@ func New(fileName string) (*Storage, error) {
 	return s, nil
 }
 
-func (s *Storage) CreateURI(link string) (string, error) {
-	const op = "storage.memory.CreateURI"
+func (s *Storage) SaveURL(link string) (string, error) {
+	const op = "storage.memory.SaveURL"
 	id := shortuuid.New()
 	l := Link{
 		UUID:        strconv.Itoa(s.pointer),
@@ -92,12 +95,16 @@ func (s *Storage) CreateURI(link string) (string, error) {
 	return id, nil
 }
 
-func (s *Storage) GetLink(id string) (string, error) {
-	const op = "storage.memory.GetLink"
+func (s *Storage) GetURL(id string) (string, error) {
+	const op = "storage.memory.GetURL"
 	idx := slices.IndexFunc(s.links, func(l Link) bool { return l.ShortURL == id })
 	if idx == -1 {
 		return "", fmt.Errorf("%s: %w", op, storage.ErrNotFound)
 	}
 
 	return s.links[idx].OriginalURL, nil
+}
+
+func (s *Storage) CheckConnect(ctx context.Context) error {
+	return nil
 }

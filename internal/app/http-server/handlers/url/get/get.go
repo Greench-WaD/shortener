@@ -6,14 +6,19 @@ import (
 	"net/http"
 )
 
-func New(store *storage.Store) http.HandlerFunc {
+//go:generate go run github.com/vektra/mockery/v2@v2.49.0 --name=URLGetter
+type URLGetter interface {
+	GetURL(id string) (string, error)
+}
+
+func New(urlGetter URLGetter) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		id := req.PathValue("id")
 		if id == "" {
 			http.Error(res, "Id parameter required", http.StatusBadRequest)
 			return
 		}
-		link, err := store.DB.GetLink(id)
+		link, err := urlGetter.GetURL(id)
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
 				http.Error(res, "Link not found", http.StatusBadRequest)

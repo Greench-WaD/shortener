@@ -4,7 +4,6 @@ import (
 	"github.com/Igorezka/shortener/internal/app/config"
 	"github.com/Igorezka/shortener/internal/app/lib/api/request"
 	resp "github.com/Igorezka/shortener/internal/app/lib/api/response"
-	"github.com/Igorezka/shortener/internal/app/storage"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 	"net/http"
@@ -20,7 +19,12 @@ type Response struct {
 	Result string `json:"result"`
 }
 
-func New(log *zap.Logger, cfg *config.Config, store *storage.Store) http.HandlerFunc {
+//go:generate go run github.com/vektra/mockery/v2@v2.49.0 --name=URLSaver
+type URLSaver interface {
+	SaveURL(url string) (string, error)
+}
+
+func New(log *zap.Logger, cfg *config.Config, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.url.create_json.New"
 		log = log.With(
@@ -51,7 +55,7 @@ func New(log *zap.Logger, cfg *config.Config, store *storage.Store) http.Handler
 			return
 		}
 
-		id, err := store.DB.CreateURI(req.URL)
+		id, err := urlSaver.SaveURL(req.URL)
 		if err != nil {
 			log.Error("failed to store link", zap.String("error", err.Error()))
 			resp.Status(r, http.StatusInternalServerError)
