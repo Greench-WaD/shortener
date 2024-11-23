@@ -1,42 +1,47 @@
 package create
 
 import (
+	"context"
 	"fmt"
 	"github.com/Igorezka/shortener/internal/app/config"
-	"github.com/Igorezka/shortener/internal/app/storage"
 	"io"
 	"net/http"
 	"net/url"
 )
 
-func New(cfg *config.Config, store *storage.Store) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		body, err := io.ReadAll(req.Body)
+//go:generate go run github.com/vektra/mockery/v2@v2.49.0 --name=URLSaver
+type URLSaver interface {
+	SaveURL(ctx context.Context, url string) (string, error)
+}
+
+func New(cfg *config.Config, urlSaver URLSaver) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		if len(string(body)) <= 0 {
-			http.Error(res, "URI required", http.StatusBadRequest)
+			http.Error(w, "URI required", http.StatusBadRequest)
 			return
 		}
 
 		if _, err = url.ParseRequestURI(string(body)); err != nil {
-			http.Error(res, "Only valid URI required", http.StatusBadRequest)
+			http.Error(w, "Only valid URI required", http.StatusBadRequest)
 			return
 		}
 
-		id, err := store.DB.CreateURI(string(body))
+		id, err := urlSaver.SaveURL(r.Context(), string(body))
 		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		res.Header().Set("content-type", "text/plain; charset=utf-8")
-		res.WriteHeader(http.StatusCreated)
+		w.Header().Set("content-type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusCreated)
 
-		_, err = res.Write([]byte(cfg.BaseURL + "/" + id))
+		_, err = w.Write([]byte(cfg.BaseURL + "/" + id))
 		if err != nil {
 			fmt.Println(err)
 		}

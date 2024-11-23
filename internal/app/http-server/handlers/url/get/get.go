@@ -1,28 +1,34 @@
 package get
 
 import (
+	"context"
 	"errors"
 	"github.com/Igorezka/shortener/internal/app/storage"
 	"net/http"
 )
 
-func New(store *storage.Store) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		id := req.PathValue("id")
+//go:generate go run github.com/vektra/mockery/v2@v2.49.0 --name=URLGetter
+type URLGetter interface {
+	GetURL(ctx context.Context, id string) (string, error)
+}
+
+func New(urlGetter URLGetter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
 		if id == "" {
-			http.Error(res, "Id parameter required", http.StatusBadRequest)
+			http.Error(w, "Id parameter required", http.StatusBadRequest)
 			return
 		}
-		link, err := store.DB.GetLink(id)
+		link, err := urlGetter.GetURL(r.Context(), id)
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
-				http.Error(res, "Link not found", http.StatusBadRequest)
+				http.Error(w, "Link not found", http.StatusBadRequest)
 				return
 			}
 
-			http.Error(res, "Server error", http.StatusInternalServerError)
+			http.Error(w, "Server error", http.StatusInternalServerError)
 			return
 		}
-		http.Redirect(res, req, link, http.StatusTemporaryRedirect)
+		http.Redirect(w, r, link, http.StatusTemporaryRedirect)
 	}
 }

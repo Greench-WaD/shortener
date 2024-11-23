@@ -1,0 +1,18 @@
+version: "3.7"
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    shm_size: 128mb
+    volumes:
+      - type: tmpfs
+        target: /tmp/shm
+        tmpfs:
+          size: 134217728 # 128*2^20 bytes = 128Mb
+    environment:
+      POSTGRES_PASSWORD: shortener
+      POSTGRES_USER: shortener
+      POSTGRES_DB: shortener
