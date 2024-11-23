@@ -1,6 +1,7 @@
 package create
 
 import (
+	"context"
 	"fmt"
 	"github.com/Igorezka/shortener/internal/app/config"
 	"io"
@@ -10,7 +11,7 @@ import (
 
 //go:generate go run github.com/vektra/mockery/v2@v2.49.0 --name=URLSaver
 type URLSaver interface {
-	SaveURL(url string) (string, error)
+	SaveURL(ctx context.Context, url string) (string, error)
 }
 
 func New(cfg *config.Config, urlSaver URLSaver) http.HandlerFunc {
@@ -31,7 +32,7 @@ func New(cfg *config.Config, urlSaver URLSaver) http.HandlerFunc {
 			return
 		}
 
-		id, err := urlSaver.SaveURL(string(body))
+		id, err := urlSaver.SaveURL(r.Context(), string(body))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

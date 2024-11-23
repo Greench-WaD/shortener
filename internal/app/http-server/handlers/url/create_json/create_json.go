@@ -1,6 +1,7 @@
 package createj
 
 import (
+	"context"
 	"github.com/Igorezka/shortener/internal/app/config"
 	"github.com/Igorezka/shortener/internal/app/lib/api/request"
 	resp "github.com/Igorezka/shortener/internal/app/lib/api/response"
@@ -21,7 +22,7 @@ type Response struct {
 
 //go:generate go run github.com/vektra/mockery/v2@v2.49.0 --name=URLSaver
 type URLSaver interface {
-	SaveURL(url string) (string, error)
+	SaveURL(ctx context.Context, url string) (string, error)
 }
 
 func New(log *zap.Logger, cfg *config.Config, urlSaver URLSaver) http.HandlerFunc {
@@ -55,7 +56,7 @@ func New(log *zap.Logger, cfg *config.Config, urlSaver URLSaver) http.HandlerFun
 			return
 		}
 
-		id, err := urlSaver.SaveURL(req.URL)
+		id, err := urlSaver.SaveURL(r.Context(), req.URL)
 		if err != nil {
 			log.Error("failed to store link", zap.String("error", err.Error()))
 			resp.Status(r, http.StatusInternalServerError)

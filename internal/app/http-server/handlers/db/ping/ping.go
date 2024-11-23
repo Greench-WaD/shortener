@@ -11,9 +11,9 @@ type ConnectChecker interface {
 	CheckConnect(ctx context.Context) error
 }
 
-func New(ctx context.Context, log *zap.Logger, checker ConnectChecker) http.HandlerFunc {
+func New(log *zap.Logger, checker ConnectChecker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := checker.CheckConnect(ctx)
+		err := checker.CheckConnect(r.Context())
 		if err != nil {
 			log.Error("failed to check db connect", zap.String("error", err.Error()))
 			resp.Status(r, http.StatusInternalServerError)

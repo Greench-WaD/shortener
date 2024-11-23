@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/lithammer/shortuuid"
 	"time"
 )
 
@@ -12,7 +13,7 @@ type Storage struct {
 	db *sql.DB
 }
 
-func New(ctx context.Context, dsn string) (*Storage, error) {
+func New(dsn string) (*Storage, error) {
 	const op = "storage.postgres.New"
 
 	db, err := sql.Open("pgx", dsn)
@@ -20,18 +21,16 @@ func New(ctx context.Context, dsn string) (*Storage, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	//stmt, err := db.Prepare(`
-	//	CREATE TABLE IF NOT EXISTS shortener(
-	//		uuid INTEGER PRIMARY KEY,
-	//		short_url TEXT NOT NULL UNIQUE,
-	//		original_url TEXT NOT NULL);
-	//	CREATE INDEX IF NOT EXISTS idx_short_url ON shortener(short_url);
-	//`)
-	//
-	//_, err = stmt.Exec()
-	//if err != nil {
-	//	return nil, fmt.Errorf("%s: %w", op, err)
-	//}
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS links(
+			uuid SERIAL PRIMARY KEY,
+			short_url TEXT NOT NULL UNIQUE,
+			original_url TEXT NOT NULL);
+		CREATE INDEX IF NOT EXISTS idx_short_url ON links(short_url);
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
 
 	return &Storage{db: db}, nil
 }
@@ -55,10 +54,24 @@ func (s *Storage) CheckConnect(ctx context.Context) error {
 	return nil
 }
 
-func (s *Storage) SaveURL(link string) (string, error) {
-	return "", nil
+func (s *Storage) SaveURL(ctx context.Context, link string) (string, error) {
+	const op = "storage.postgres.SaveURL"
+	id := shortuuid.New()
+	_, err := s.db.ExecContext(ctx, "INSERT INTO links (short_url, original_url) VALUES ($1,$2)", id, link)
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+	return id, nil
 }
 
-func (s *Storage) GetURL(id string) (string, error) {
-	return "", nil
+func (s *Storage) GetURL(ctx context.Context, id string) (string, error) {
+	const op = "storage.postgres.GetURL"
+	row := s.db.QueryRowContext(ctx, "SELECT original_url FROM links WHERE short_url = $1", id)
+	var url string
+	err := row.Scan(&url)
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	return url, nil
 }

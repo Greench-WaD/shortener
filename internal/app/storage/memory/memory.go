@@ -46,6 +46,7 @@ func New(fileName string) (*Storage, error) {
 
 	if len(fileName) > 0 {
 		dir, err := filepath.Abs(filepath.Dir(fileName))
+		fmt.Println(dir)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
@@ -76,12 +77,11 @@ func New(fileName string) (*Storage, error) {
 	return s, nil
 }
 
-func (s *Storage) SaveURL(link string) (string, error) {
+func (s *Storage) SaveURL(ctx context.Context, link string) (string, error) {
 	const op = "storage.memory.SaveURL"
-	id := shortuuid.New()
 	l := Link{
 		UUID:        strconv.Itoa(s.pointer),
-		ShortURL:    id,
+		ShortURL:    shortuuid.New(),
 		OriginalURL: link,
 	}
 	s.links = append(s.links, l)
@@ -92,10 +92,10 @@ func (s *Storage) SaveURL(link string) (string, error) {
 		}
 	}
 	s.pointer += 1
-	return id, nil
+	return l.ShortURL, nil
 }
 
-func (s *Storage) GetURL(id string) (string, error) {
+func (s *Storage) GetURL(ctx context.Context, id string) (string, error) {
 	const op = "storage.memory.GetURL"
 	idx := slices.IndexFunc(s.links, func(l Link) bool { return l.ShortURL == id })
 	if idx == -1 {

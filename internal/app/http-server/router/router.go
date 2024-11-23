@@ -14,18 +14,18 @@ import (
 )
 
 type Storage interface {
-	SaveURL(link string) (string, error)
-	GetURL(id string) (string, error)
+	SaveURL(ctx context.Context, link string) (string, error)
+	GetURL(ctx context.Context, id string) (string, error)
 	CheckConnect(ctx context.Context) error
 }
 
-func New(ctx context.Context, log *zap.Logger, cfg *config.Config, store Storage) chi.Router {
+func New(log *zap.Logger, cfg *config.Config, store Storage) chi.Router {
 	r := chi.NewRouter()
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequestID)
 		r.Use(mw.RequestLogger(log))
 		r.Get("/{id}", get.New(store))
-		r.Get("/ping", ping.New(ctx, log, store))
+		r.Get("/ping", ping.New(log, store))
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AllowContentType("text/plain", "application/x-gzip"))
 			r.Use(mw.GzipMiddleware)
