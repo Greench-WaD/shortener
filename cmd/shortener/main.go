@@ -40,6 +40,7 @@ func main() {
 		zap.String("Address", cfg.RunAddr),
 		zap.String("Base URL", cfg.BaseURL),
 	)
+
 	err = http.ListenAndServe(cfg.RunAddr, router.New(log, cfg, store))
 	if err != nil {
 		panic(err)
