@@ -58,7 +58,7 @@ func TestNew(t *testing.T) {
 		if tt.want.code != http.StatusBadRequest {
 			store.On("GetURL", mock.Anything, tt.request.id).Return(tt.want.location, nil)
 		} else {
-			store.On("GetURL", tt.request.id).Return("", storage.ErrNotFound)
+			store.On("GetURL", mock.Anything, tt.request.id).Return("", storage.ErrNotFound)
 		}
 		mux := http.NewServeMux()
 		mux.HandleFunc(`/{id}`, New(store))

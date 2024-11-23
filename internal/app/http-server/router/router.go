@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate go run github.com/vektra/mockery/v2@v2.49.0 --name=Storage
 type Storage interface {
 	SaveURL(ctx context.Context, link string) (string, error)
 	GetURL(ctx context.Context, id string) (string, error)
