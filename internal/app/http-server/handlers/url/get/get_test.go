@@ -6,6 +6,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/lithammer/shortuuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -55,7 +56,7 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		store := mocks.NewURLGetter(t)
 		if tt.want.code != http.StatusBadRequest {
-			store.On("GetURL", tt.request.id).Return(tt.want.location, nil)
+			store.On("GetURL", mock.Anything, tt.request.id).Return(tt.want.location, nil)
 		} else {
 			store.On("GetURL", tt.request.id).Return("", storage.ErrNotFound)
 		}

@@ -7,6 +7,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/lithammer/shortuuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"net/http"
@@ -99,7 +100,7 @@ func TestNew(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			store := mocks.NewURLSaver(t)
 			if tt.want.code != http.StatusBadRequest {
-				store.On("SaveURL", tt.want.link).Return(shortuuid.New(), nil)
+				store.On("SaveURL", mock.Anything, tt.want.link).Return(shortuuid.New(), nil)
 			}
 			log := zap.NewNop()
 			handler := New(log, cfg, store)

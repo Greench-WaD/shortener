@@ -6,6 +6,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/lithammer/shortuuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
@@ -72,7 +73,7 @@ func TestNew(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			store := mocks.NewURLSaver(t)
 			if tt.want.code != http.StatusBadRequest {
-				store.On("SaveURL", tt.request.body).Return(shortuuid.New(), nil)
+				store.On("SaveURL", mock.Anything, tt.request.body).Return(shortuuid.New(), nil)
 			}
 			handler := New(cfg, store)
 			srv := httptest.NewServer(handler)
