@@ -12,6 +12,7 @@ services:
         target: /tmp/shm
         tmpfs:
           size: 134217728 # 128*2^20 bytes = 128Mb
+      - ./tmp/postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: shortener
       POSTGRES_USER: shortener
