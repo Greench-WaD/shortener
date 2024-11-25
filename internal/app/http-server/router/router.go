@@ -5,9 +5,11 @@ import (
 	"github.com/Igorezka/shortener/internal/app/config"
 	"github.com/Igorezka/shortener/internal/app/http-server/handlers/db/ping"
 	"github.com/Igorezka/shortener/internal/app/http-server/handlers/url/create"
-	createj "github.com/Igorezka/shortener/internal/app/http-server/handlers/url/create_json"
+	cb "github.com/Igorezka/shortener/internal/app/http-server/handlers/url/create_batch"
+	cj "github.com/Igorezka/shortener/internal/app/http-server/handlers/url/create_json"
 	"github.com/Igorezka/shortener/internal/app/http-server/handlers/url/get"
 	mw "github.com/Igorezka/shortener/internal/app/http-server/middleware"
+	"github.com/Igorezka/shortener/internal/app/storage/models"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
@@ -18,11 +20,13 @@ type Storage interface {
 	SaveURL(ctx context.Context, link string) (string, error)
 	GetURL(ctx context.Context, id string) (string, error)
 	CheckConnect(ctx context.Context) error
+	SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest) ([]models.BatchLinkResponse, error)
 }
 
 func New(log *zap.Logger, cfg *config.Config, store Storage) chi.Router {
 	r := chi.NewRouter()
 	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequestSize(500000))
 		r.Use(middleware.RequestID)
 		r.Use(mw.RequestLogger(log))
 		r.Get("/{id}", get.New(store))
@@ -35,7 +39,8 @@ func New(log *zap.Logger, cfg *config.Config, store Storage) chi.Router {
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AllowContentType("application/json"))
 			r.Use(mw.GzipMiddleware)
-			r.Post("/api/shorten", createj.New(log, cfg, store))
+			r.Post("/api/shorten", cj.New(log, cfg, store))
+			r.Post("/api/shorten/batch", cb.New(log, cfg, store))
 		})
 	})
 

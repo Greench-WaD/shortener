@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Igorezka/shortener/internal/app/storage"
+	"github.com/Igorezka/shortener/internal/app/storage/models"
 	"github.com/lithammer/shortuuid"
 	"os"
 	"path/filepath"
@@ -107,4 +108,8 @@ func (s *Storage) GetURL(ctx context.Context, id string) (string, error) {
 
 func (s *Storage) CheckConnect(ctx context.Context) error {
 	return nil
+}
+
+func (s *Storage) SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest) ([]models.BatchLinkResponse, error) {
+	return nil, nil
 }

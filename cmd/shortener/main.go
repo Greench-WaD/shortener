@@ -6,6 +6,7 @@ import (
 	"github.com/Igorezka/shortener/internal/app/http-server/router"
 	"github.com/Igorezka/shortener/internal/app/logger"
 	"github.com/Igorezka/shortener/internal/app/storage/memory"
+	"github.com/Igorezka/shortener/internal/app/storage/models"
 	"github.com/Igorezka/shortener/internal/app/storage/postgres"
 	"go.uber.org/zap"
 	"net/http"
@@ -15,6 +16,7 @@ type Storage interface {
 	SaveURL(ctx context.Context, link string) (string, error)
 	GetURL(ctx context.Context, id string) (string, error)
 	CheckConnect(ctx context.Context) error
+	SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest) ([]models.BatchLinkResponse, error)
 	Close() error
 }
 
