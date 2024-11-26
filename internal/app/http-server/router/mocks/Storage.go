@@ -5,6 +5,7 @@ package mocks
 import (
 	context "context"
 
+	models "github.com/Igorezka/shortener/internal/app/storage/models"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -52,6 +53,36 @@ func (_m *Storage) GetURL(ctx context.Context, id string) (string, error) {
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SaveBatchURL provides a mock function with given fields: ctx, baseURL, batch
+func (_m *Storage) SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest) ([]models.BatchLinkResponse, error) {
+	ret := _m.Called(ctx, baseURL, batch)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SaveBatchURL")
+	}
+
+	var r0 []models.BatchLinkResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, []models.BatchLinkRequest) ([]models.BatchLinkResponse, error)); ok {
+		return rf(ctx, baseURL, batch)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, []models.BatchLinkRequest) []models.BatchLinkResponse); ok {
+		r0 = rf(ctx, baseURL, batch)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.BatchLinkResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, []models.BatchLinkRequest) error); ok {
+		r1 = rf(ctx, baseURL, batch)
 	} else {
 		r1 = ret.Error(1)
 	}
