@@ -1,4 +1,4 @@
-package create_batch
+package createb
 
 import (
 	"context"
