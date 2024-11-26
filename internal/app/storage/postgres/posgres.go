@@ -3,8 +3,12 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"github.com/Igorezka/shortener/internal/app/storage"
 	"github.com/Igorezka/shortener/internal/app/storage/models"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/lithammer/shortuuid"
 	"time"
@@ -26,7 +30,7 @@ func New(dsn string) (*Storage, error) {
 	CREATE TABLE IF NOT EXISTS links(
 		uuid SERIAL PRIMARY KEY,
 		short_url TEXT NOT NULL UNIQUE,
-		original_url TEXT NOT NULL);
+		original_url TEXT NOT NULL UNIQUE);
 	CREATE INDEX IF NOT EXISTS idx_short_url ON links(short_url);
 	`)
 	if err != nil {
@@ -62,6 +66,18 @@ func (s *Storage) SaveURL(ctx context.Context, link string) (string, error) {
 	id := shortuuid.New()
 	_, err := s.db.ExecContext(ctx, "INSERT INTO links (short_url, original_url) VALUES ($1,$2)", id, link)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			row := s.db.QueryRowContext(ctx, "SELECT short_url FROM links WHERE original_url = $1", link)
+			var i string
+			err := row.Scan(&i)
+			if err != nil {
+				return "", fmt.Errorf("%s: %w", op, err)
+			}
+
+			return i, fmt.Errorf("%s: %w", op, storage.ErrURLExist)
+		}
+
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
 

@@ -2,8 +2,10 @@ package create
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/Igorezka/shortener/internal/app/config"
+	"github.com/Igorezka/shortener/internal/app/storage"
 	"io"
 	"net/http"
 	"net/url"
@@ -14,6 +16,7 @@ type URLSaver interface {
 	SaveURL(ctx context.Context, url string) (string, error)
 }
 
+// TODO: логгирование и рефакторинг
 func New(cfg *config.Config, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
@@ -34,11 +37,20 @@ func New(cfg *config.Config, urlSaver URLSaver) http.HandlerFunc {
 
 		id, err := urlSaver.SaveURL(r.Context(), string(body))
 		if err != nil {
+			if errors.Is(err, storage.ErrURLExist) {
+				w.Header().Set("content-type", "text/plain")
+				w.WriteHeader(http.StatusConflict)
+				_, err = w.Write([]byte(cfg.BaseURL + "/" + id))
+				if err != nil {
+					fmt.Println(err)
+				}
+				return
+			}
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		w.Header().Set("content-type", "text/plain; charset=utf-8")
+		w.Header().Set("content-type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
 
 		_, err = w.Write([]byte(cfg.BaseURL + "/" + id))
