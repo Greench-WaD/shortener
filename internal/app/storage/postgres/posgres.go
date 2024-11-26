@@ -7,7 +7,6 @@ import (
 	"github.com/Igorezka/shortener/internal/app/storage/models"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/lithammer/shortuuid"
-	"net/url"
 	"time"
 )
 
@@ -99,10 +98,6 @@ func (s *Storage) SaveBatchURL(ctx context.Context, baseURL string, batch []mode
 
 	var res []models.BatchLinkResponse
 	for _, b := range batch {
-		if _, err := url.ParseRequestURI(b.OriginalURL); err != nil {
-			return nil, fmt.Errorf("%s: %w", op, err)
-		}
-
 		id := shortuuid.New()
 		_, err := stmt.ExecContext(ctx, id, b.OriginalURL)
 		if err != nil {

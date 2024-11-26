@@ -111,5 +111,31 @@ func (s *Storage) CheckConnect(ctx context.Context) error {
 }
 
 func (s *Storage) SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest) ([]models.BatchLinkResponse, error) {
-	return nil, nil
+	const op = "storage.memory.SaveBatchURL"
+
+	var links []Link
+	var res []models.BatchLinkResponse
+	for _, b := range batch {
+		id := shortuuid.New()
+		links = append(links, Link{
+			UUID:        strconv.Itoa(s.pointer),
+			ShortURL:    id,
+			OriginalURL: b.OriginalURL,
+		})
+		res = append(res, models.BatchLinkResponse{
+			CorrelationID: b.CorrelationID,
+			ShortURL:      baseURL + "/" + id,
+		})
+	}
+	s.links = append(s.links, links...)
+	if s.encoder != nil {
+		for _, l := range links {
+			err := s.encoder.Encode(l)
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", op, storage.ErrCreateLink)
+			}
+		}
+	}
+	fmt.Println(s.links)
+	return res, nil
 }

@@ -14,9 +14,9 @@ import (
 
 type Storage interface {
 	SaveURL(ctx context.Context, link string) (string, error)
+	SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest) ([]models.BatchLinkResponse, error)
 	GetURL(ctx context.Context, id string) (string, error)
 	CheckConnect(ctx context.Context) error
-	SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest) ([]models.BatchLinkResponse, error)
 	Close() error
 }
 

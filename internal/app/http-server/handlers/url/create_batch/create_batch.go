@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 	"net/http"
+	"net/url"
 )
 
 type URLSaver interface {
@@ -38,6 +39,15 @@ func New(log *zap.Logger, cfg *config.Config, urlSaver URLSaver) http.HandlerFun
 			resp.Status(r, http.StatusBadRequest)
 			resp.JSON(w, r, resp.Error("urls required"))
 			return
+		}
+
+		for _, b := range req {
+			if _, err := url.ParseRequestURI(b.OriginalURL); err != nil {
+				log.Info("only valid urls required")
+				resp.Status(r, http.StatusBadRequest)
+				resp.JSON(w, r, resp.Error("only valid urls required: "+b.OriginalURL))
+				return
+			}
 		}
 
 		res, err := urlSaver.SaveBatchURL(r.Context(), cfg.BaseURL, req)
