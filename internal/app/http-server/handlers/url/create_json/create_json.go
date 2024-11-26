@@ -2,9 +2,11 @@ package createj
 
 import (
 	"context"
+	"errors"
 	"github.com/Igorezka/shortener/internal/app/config"
 	"github.com/Igorezka/shortener/internal/app/lib/api/request"
 	resp "github.com/Igorezka/shortener/internal/app/lib/api/response"
+	"github.com/Igorezka/shortener/internal/app/storage"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 	"net/http"
@@ -59,6 +61,14 @@ func New(log *zap.Logger, cfg *config.Config, urlSaver URLSaver) http.HandlerFun
 		id, err := urlSaver.SaveURL(r.Context(), req.URL)
 		if err != nil {
 			log.Error("failed to store link", zap.String("error", err.Error()))
+			if errors.Is(err, storage.ErrURLExist) {
+				resp.Status(r, http.StatusConflict)
+				resp.JSON(w, r, Response{
+					Response: resp.OK(),
+					Result:   cfg.BaseURL + "/" + id,
+				})
+				return
+			}
 			resp.Status(r, http.StatusInternalServerError)
 			resp.JSON(w, r, resp.Error("internal server error"))
 			return
