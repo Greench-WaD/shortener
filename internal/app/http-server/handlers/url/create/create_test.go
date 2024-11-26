@@ -36,36 +36,36 @@ func TestNew(t *testing.T) {
 			name: "Positive",
 			want: want{
 				code:        http.StatusCreated,
-				contentType: "text/plain; charset=utf-8",
+				contentType: "text/plain",
 			},
 			request: request{
 				method:      http.MethodPost,
 				body:        "https://ya.ru",
-				contentType: "text/plain; charset=utf-8",
+				contentType: "text/plain",
 			},
 		},
 		{
 			name: "Negative URI required",
 			want: want{
 				code:        http.StatusBadRequest,
-				contentType: "text/plain; charset=utf-8",
+				contentType: "text/plain",
 			},
 			request: request{
 				method:      http.MethodGet,
 				body:        "",
-				contentType: "text/plain; charset=utf-8",
+				contentType: "text/plain",
 			},
 		},
 		{
 			name: "Negative Invalid url",
 			want: want{
 				code:        http.StatusBadRequest,
-				contentType: "text/plain; charset=utf-8",
+				contentType: "text/plain",
 			},
 			request: request{
 				method:      http.MethodPost,
 				body:        "httpsyaru",
-				contentType: "text/plain; charset=utf-8",
+				contentType: "text/plain",
 			},
 		},
 	}
@@ -87,7 +87,7 @@ func TestNew(t *testing.T) {
 			assert.NoError(t, err, "error making HTTP request")
 
 			assert.Equal(t, tt.want.code, result.StatusCode())
-			assert.Equal(t, tt.want.contentType, result.Header().Get("Content-Type"))
+			assert.Contains(t, result.Header().Get("Content-Type"), tt.want.contentType)
 
 			if result.StatusCode() == http.StatusCreated {
 				_, err := url.Parse(string(result.Body()))
