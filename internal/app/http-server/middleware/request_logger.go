@@ -30,7 +30,7 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 	r.responseData.status = statusCode
 }
 
-func RequestLogger(logger *zap.Logger) func(next http.Handler) http.Handler {
+func RequestLogger(log *zap.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
@@ -43,7 +43,7 @@ func RequestLogger(logger *zap.Logger) func(next http.Handler) http.Handler {
 				responseData:   responseData,
 			}
 			next.ServeHTTP(&lw, r)
-			logger.Info("HTTP request",
+			log.Info("HTTP request",
 				zap.String("request_id", middleware.GetReqID(r.Context())),
 				zap.String("method", r.Method),
 				zap.String("path", r.URL.Path),

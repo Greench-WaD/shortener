@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/Igorezka/shortener/internal/app/config"
 	"github.com/Igorezka/shortener/internal/app/http-server/router"
+	"github.com/Igorezka/shortener/internal/app/lib/cipher"
 	"github.com/Igorezka/shortener/internal/app/logger"
 	"github.com/Igorezka/shortener/internal/app/storage/memory"
 	"github.com/Igorezka/shortener/internal/app/storage/models"
@@ -13,9 +14,10 @@ import (
 )
 
 type Storage interface {
-	SaveURL(ctx context.Context, link string) (string, error)
-	SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest) ([]models.BatchLinkResponse, error)
+	SaveURL(ctx context.Context, link string, userID string) (string, error)
+	SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest, userID string) ([]models.BatchLinkResponse, error)
 	GetURL(ctx context.Context, id string) (string, error)
+	GetUserURLS(ctx context.Context, baseURL string, userID string) ([]models.UserBatchLink, error)
 	CheckConnect(ctx context.Context) error
 	Close() error
 }
@@ -37,13 +39,18 @@ func main() {
 	}
 	defer store.Close()
 
+	cipher, err := cipher.New()
+	if err != nil {
+		panic(err)
+	}
+
 	log.Info(
 		"starting server",
 		zap.String("Address", cfg.RunAddr),
 		zap.String("Base URL", cfg.BaseURL),
 	)
 
-	err = http.ListenAndServe(cfg.RunAddr, router.New(log, cfg, store))
+	err = http.ListenAndServe(cfg.RunAddr, router.New(log, cfg, store, cipher))
 	if err != nil {
 		panic(err)
 	}

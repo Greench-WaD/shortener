@@ -30,7 +30,8 @@ func New(dsn string) (*Storage, error) {
 	CREATE TABLE IF NOT EXISTS links(
 		uuid SERIAL PRIMARY KEY,
 		short_url TEXT NOT NULL UNIQUE,
-		original_url TEXT NOT NULL UNIQUE);
+		original_url TEXT NOT NULL UNIQUE,
+	    user_id TEXT NOT NULL);
 	CREATE INDEX IF NOT EXISTS idx_short_url ON links(short_url);
 	`)
 	if err != nil {
@@ -60,11 +61,11 @@ func (s *Storage) CheckConnect(ctx context.Context) error {
 	return nil
 }
 
-func (s *Storage) SaveURL(ctx context.Context, link string) (string, error) {
+func (s *Storage) SaveURL(ctx context.Context, link string, userID string) (string, error) {
 	const op = "storage.postgres.SaveURL"
 
 	id := shortuuid.New()
-	_, err := s.db.ExecContext(ctx, "INSERT INTO links (short_url, original_url) VALUES ($1,$2)", id, link)
+	_, err := s.db.ExecContext(ctx, "INSERT INTO links (short_url, original_url, user_id) VALUES ($1,$2,$3)", id, link, userID)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
@@ -84,6 +85,7 @@ func (s *Storage) SaveURL(ctx context.Context, link string) (string, error) {
 	return id, nil
 }
 
+// TODO: Обработка ошибок бд
 func (s *Storage) GetURL(ctx context.Context, id string) (string, error) {
 	const op = "storage.postgres.GetURL"
 
@@ -97,7 +99,30 @@ func (s *Storage) GetURL(ctx context.Context, id string) (string, error) {
 	return url, nil
 }
 
-func (s *Storage) SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest) ([]models.BatchLinkResponse, error) {
+func (s *Storage) GetUserURLS(ctx context.Context, baseURL string, userID string) ([]models.UserBatchLink, error) {
+	const op = "storage.postgres.GetUserURLS"
+
+	rows, err := s.db.QueryContext(ctx, "SELECT short_url, original_url FROM links WHERE user_id = $1", userID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	links := make([]models.UserBatchLink, 0)
+
+	for rows.Next() {
+		var link models.UserBatchLink
+		if err := rows.Scan(&link.ShortURL, &link.OriginalURL); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		link.ShortURL = baseURL + "/" + link.ShortURL
+		links = append(links, link)
+	}
+
+	return links, nil
+}
+
+func (s *Storage) SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest, userID string) ([]models.BatchLinkResponse, error) {
 	const op = "storage.postgres.SaveBatchURL"
 
 	tx, err := s.db.Begin()
@@ -106,7 +131,7 @@ func (s *Storage) SaveBatchURL(ctx context.Context, baseURL string, batch []mode
 	}
 	defer tx.Rollback()
 
-	stmt, err := tx.PrepareContext(ctx, "INSERT INTO links (short_url, original_url) VALUES ($1,$2)")
+	stmt, err := tx.PrepareContext(ctx, "INSERT INTO links (short_url, original_url, user_id) VALUES ($1,$2,$3)")
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -115,7 +140,7 @@ func (s *Storage) SaveBatchURL(ctx context.Context, baseURL string, batch []mode
 	var res []models.BatchLinkResponse
 	for _, b := range batch {
 		id := shortuuid.New()
-		_, err := stmt.ExecContext(ctx, id, b.OriginalURL)
+		_, err := stmt.ExecContext(ctx, id, b.OriginalURL, userID)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}

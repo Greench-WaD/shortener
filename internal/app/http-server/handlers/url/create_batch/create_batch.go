@@ -5,28 +5,43 @@ import (
 	"github.com/Igorezka/shortener/internal/app/config"
 	"github.com/Igorezka/shortener/internal/app/lib/api/request"
 	resp "github.com/Igorezka/shortener/internal/app/lib/api/response"
+	ci "github.com/Igorezka/shortener/internal/app/lib/cipher"
 	"github.com/Igorezka/shortener/internal/app/storage/models"
-	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 	"net/http"
 	"net/url"
 )
 
 type URLSaver interface {
-	SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest) ([]models.BatchLinkResponse, error)
+	SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest, userID string) ([]models.BatchLinkResponse, error)
 }
 
-func New(log *zap.Logger, cfg *config.Config, urlSaver URLSaver) http.HandlerFunc {
+func New(log *zap.Logger, cfg *config.Config, cipher *ci.Cipher, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.url.create_batch.New"
 
-		log = log.With(
+		log := log.With(
 			zap.String("op", op),
-			zap.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
+		token, err := r.Cookie("token")
+		if err != nil {
+			log.Error("token required", zap.String("error", err.Error()))
+			resp.Status(r, http.StatusUnauthorized)
+			resp.JSON(w, r, resp.Error("Unauthorized"))
+			return
+		}
+
+		userID, err := cipher.Open(token.Value)
+		if err != nil {
+			log.Error("failed to decode token", zap.String("error", err.Error()))
+			resp.Status(r, http.StatusInternalServerError)
+			resp.JSON(w, r, resp.Error("Unauthorized"))
+			return
+		}
+
 		var req []models.BatchLinkRequest
-		err := request.DecodeJSON(r.Body, &req)
+		err = request.DecodeJSON(r.Body, &req)
 		if err != nil {
 			log.Error("failed to decode request", zap.String("error", err.Error()))
 			resp.Status(r, http.StatusBadRequest)
@@ -50,7 +65,7 @@ func New(log *zap.Logger, cfg *config.Config, urlSaver URLSaver) http.HandlerFun
 			}
 		}
 
-		res, err := urlSaver.SaveBatchURL(r.Context(), cfg.BaseURL, req)
+		res, err := urlSaver.SaveBatchURL(r.Context(), cfg.BaseURL, req, userID)
 		if err != nil {
 			log.Error("failed to store link", zap.String("error", err.Error()))
 			resp.Status(r, http.StatusInternalServerError)

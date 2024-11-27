@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Igorezka/shortener/internal/app/config"
+	ci "github.com/Igorezka/shortener/internal/app/lib/cipher"
 	"github.com/Igorezka/shortener/internal/app/storage"
 	"io"
 	"net/http"
@@ -13,12 +14,24 @@ import (
 
 //go:generate go run github.com/vektra/mockery/v2@v2.49.0 --name=URLSaver
 type URLSaver interface {
-	SaveURL(ctx context.Context, url string) (string, error)
+	SaveURL(ctx context.Context, url string, userID string) (string, error)
 }
 
 // TODO: логгирование и рефакторинг
-func New(cfg *config.Config, urlSaver URLSaver) http.HandlerFunc {
+func New(cfg *config.Config, cipher *ci.Cipher, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		token, err := r.Cookie("token")
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		userID, err := cipher.Open(token.Value)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -35,7 +48,7 @@ func New(cfg *config.Config, urlSaver URLSaver) http.HandlerFunc {
 			return
 		}
 
-		id, err := urlSaver.SaveURL(r.Context(), string(body))
+		id, err := urlSaver.SaveURL(r.Context(), string(body), userID)
 		if err != nil {
 			if errors.Is(err, storage.ErrURLExist) {
 				w.Header().Set("content-type", "text/plain")
