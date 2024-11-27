@@ -119,6 +119,10 @@ func (s *Storage) GetUserURLS(ctx context.Context, baseURL string, userID string
 		links = append(links, link)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
 	return links, nil
 }
 

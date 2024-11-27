@@ -53,6 +53,9 @@ func (c *Cipher) Sile(src string) string {
 func (c *Cipher) Open(data string) (string, error) {
 	nonce := c.key[len(c.key)-c.aesgcm.NonceSize():]
 	dst, err := hex.DecodeString(data)
+	if err != nil {
+		return "", err
+	}
 	src, err := c.aesgcm.Open(nil, nonce, dst, nil)
 	if err != nil {
 		return "", err
