@@ -21,15 +21,15 @@ type URLSaver interface {
 func New(cfg *config.Config, cipher *ci.Cipher, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token, err := r.Cookie("token")
+		var userID string
 		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		userID, err := cipher.Open(token.Value)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			userID = ""
+		} else {
+			userID, err = cipher.Open(token.Value)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		body, err := io.ReadAll(r.Body)

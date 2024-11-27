@@ -31,7 +31,7 @@ func New(dsn string) (*Storage, error) {
 		uuid SERIAL PRIMARY KEY,
 		short_url TEXT NOT NULL UNIQUE,
 		original_url TEXT NOT NULL UNIQUE,
-	    user_id TEXT NOT NULL);
+	    user_id TEXT NULL);
 	CREATE INDEX IF NOT EXISTS idx_short_url ON links(short_url);
 	`)
 	if err != nil {

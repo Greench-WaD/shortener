@@ -35,19 +35,17 @@ func New(log *zap.Logger, cfg *config.Config, cipher *ci.Cipher, urlSaver URLSav
 		)
 
 		token, err := r.Cookie("token")
+		var userID string
 		if err != nil {
-			log.Error("token required", zap.String("error", err.Error()))
-			resp.Status(r, http.StatusUnauthorized)
-			resp.JSON(w, r, resp.Error("Unauthorized"))
-			return
-		}
-
-		userID, err := cipher.Open(token.Value)
-		if err != nil {
-			log.Error("failed to decode token", zap.String("error", err.Error()))
-			resp.Status(r, http.StatusInternalServerError)
-			resp.JSON(w, r, resp.Error("Unauthorized"))
-			return
+			userID = ""
+		} else {
+			userID, err = cipher.Open(token.Value)
+			if err != nil {
+				log.Error("failed to decode token", zap.String("error", err.Error()))
+				resp.Status(r, http.StatusInternalServerError)
+				resp.JSON(w, r, resp.Error("Unauthorized"))
+				return
+			}
 		}
 
 		var req Request
