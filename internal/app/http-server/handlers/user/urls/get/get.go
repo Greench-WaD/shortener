@@ -13,11 +13,11 @@ import (
 	"net/http"
 )
 
-type UrlGetter interface {
+type URLGetter interface {
 	GetUserURLS(ctx context.Context, baseURL string, userID string) ([]models.UserBatchLink, error)
 }
 
-func New(log *zap.Logger, cipher *ci.Cipher, cfg *config.Config, urlGetter UrlGetter) http.HandlerFunc {
+func New(log *zap.Logger, cipher *ci.Cipher, cfg *config.Config, urlGetter URLGetter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.user.urls.get.New"
 
