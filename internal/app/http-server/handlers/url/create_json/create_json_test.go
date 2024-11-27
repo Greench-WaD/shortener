@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/Igorezka/shortener/internal/app/config"
 	"github.com/Igorezka/shortener/internal/app/http-server/handlers/url/create_json/mocks"
+	"github.com/Igorezka/shortener/internal/app/lib/cipher"
 	"github.com/go-resty/resty/v2"
 	"github.com/lithammer/shortuuid"
 	"github.com/stretchr/testify/assert"
@@ -100,10 +101,11 @@ func TestNew(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			store := mocks.NewURLSaver(t)
 			if tt.want.code != http.StatusBadRequest {
-				store.On("SaveURL", mock.Anything, tt.want.link).Return(shortuuid.New(), nil)
+				store.On("SaveURL", mock.Anything, tt.want.link, "").Return(shortuuid.New(), nil)
 			}
 			log := zap.NewNop()
-			handler := New(log, cfg, store)
+			c, _ := cipher.New()
+			handler := New(log, cfg, c, store)
 			srv := httptest.NewServer(handler)
 			defer srv.Close()
 
