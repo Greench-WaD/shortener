@@ -13,6 +13,7 @@ func New(level string) (*zap.Logger, error) {
 
 	cfg := zap.NewProductionConfig()
 	cfg.Level = lvl
+	cfg.DisableStacktrace = true
 
 	zl, err := cfg.Build()
 	if err != nil {

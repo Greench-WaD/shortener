@@ -6,8 +6,8 @@ import (
 	"github.com/Igorezka/shortener/internal/app/config"
 	"github.com/Igorezka/shortener/internal/app/lib/api/request"
 	resp "github.com/Igorezka/shortener/internal/app/lib/api/response"
+	ci "github.com/Igorezka/shortener/internal/app/lib/cipher"
 	"github.com/Igorezka/shortener/internal/app/storage"
-	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 	"net/http"
 	"net/url"
@@ -24,19 +24,32 @@ type Response struct {
 
 //go:generate go run github.com/vektra/mockery/v2@v2.49.0 --name=URLSaver
 type URLSaver interface {
-	SaveURL(ctx context.Context, url string) (string, error)
+	SaveURL(ctx context.Context, url string, userID string) (string, error)
 }
 
-func New(log *zap.Logger, cfg *config.Config, urlSaver URLSaver) http.HandlerFunc {
+func New(log *zap.Logger, cfg *config.Config, cipher *ci.Cipher, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.url.create_json.New"
-		log = log.With(
+		log := log.With(
 			zap.String("op", op),
-			zap.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
+		token, err := r.Cookie("token")
+		var userID string
+		if err != nil {
+			userID = ""
+		} else {
+			userID, err = cipher.Open(token.Value)
+			if err != nil {
+				log.Error("failed to decode token", zap.String("error", err.Error()))
+				resp.Status(r, http.StatusInternalServerError)
+				resp.JSON(w, r, resp.Error("Unauthorized"))
+				return
+			}
+		}
+
 		var req Request
-		err := request.DecodeJSON(r.Body, &req)
+		err = request.DecodeJSON(r.Body, &req)
 		if err != nil {
 			log.Error("failed to decode request", zap.String("error", err.Error()))
 			resp.Status(r, http.StatusBadRequest)
@@ -58,7 +71,7 @@ func New(log *zap.Logger, cfg *config.Config, urlSaver URLSaver) http.HandlerFun
 			return
 		}
 
-		id, err := urlSaver.SaveURL(r.Context(), req.URL)
+		id, err := urlSaver.SaveURL(r.Context(), req.URL, userID)
 		if err != nil {
 			log.Error("failed to store link", zap.String("error", err.Error()))
 			if errors.Is(err, storage.ErrURLExist) {

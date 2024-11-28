@@ -60,29 +60,29 @@ func (_m *Storage) GetURL(ctx context.Context, id string) (string, error) {
 	return r0, r1
 }
 
-// SaveBatchURL provides a mock function with given fields: ctx, baseURL, batch
-func (_m *Storage) SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest) ([]models.BatchLinkResponse, error) {
-	ret := _m.Called(ctx, baseURL, batch)
+// GetUserURLS provides a mock function with given fields: ctx, baseURL, userID
+func (_m *Storage) GetUserURLS(ctx context.Context, baseURL string, userID string) ([]models.UserBatchLink, error) {
+	ret := _m.Called(ctx, baseURL, userID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for SaveBatchURL")
+		panic("no return value specified for GetUserURLS")
 	}
 
-	var r0 []models.BatchLinkResponse
+	var r0 []models.UserBatchLink
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, []models.BatchLinkRequest) ([]models.BatchLinkResponse, error)); ok {
-		return rf(ctx, baseURL, batch)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) ([]models.UserBatchLink, error)); ok {
+		return rf(ctx, baseURL, userID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, []models.BatchLinkRequest) []models.BatchLinkResponse); ok {
-		r0 = rf(ctx, baseURL, batch)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) []models.UserBatchLink); ok {
+		r0 = rf(ctx, baseURL, userID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]models.BatchLinkResponse)
+			r0 = ret.Get(0).([]models.UserBatchLink)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, []models.BatchLinkRequest) error); ok {
-		r1 = rf(ctx, baseURL, batch)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, baseURL, userID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -90,9 +90,39 @@ func (_m *Storage) SaveBatchURL(ctx context.Context, baseURL string, batch []mod
 	return r0, r1
 }
 
-// SaveURL provides a mock function with given fields: ctx, link
-func (_m *Storage) SaveURL(ctx context.Context, link string) (string, error) {
-	ret := _m.Called(ctx, link)
+// SaveBatchURL provides a mock function with given fields: ctx, baseURL, batch, userID
+func (_m *Storage) SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest, userID string) ([]models.BatchLinkResponse, error) {
+	ret := _m.Called(ctx, baseURL, batch, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SaveBatchURL")
+	}
+
+	var r0 []models.BatchLinkResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, []models.BatchLinkRequest, string) ([]models.BatchLinkResponse, error)); ok {
+		return rf(ctx, baseURL, batch, userID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, []models.BatchLinkRequest, string) []models.BatchLinkResponse); ok {
+		r0 = rf(ctx, baseURL, batch, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.BatchLinkResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, []models.BatchLinkRequest, string) error); ok {
+		r1 = rf(ctx, baseURL, batch, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SaveURL provides a mock function with given fields: ctx, link, userID
+func (_m *Storage) SaveURL(ctx context.Context, link string, userID string) (string, error) {
+	ret := _m.Called(ctx, link, userID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SaveURL")
@@ -100,17 +130,17 @@ func (_m *Storage) SaveURL(ctx context.Context, link string) (string, error) {
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
-		return rf(ctx, link)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (string, error)); ok {
+		return rf(ctx, link, userID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) string); ok {
-		r0 = rf(ctx, link)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) string); ok {
+		r0 = rf(ctx, link, userID)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, link)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, link, userID)
 	} else {
 		r1 = ret.Error(1)
 	}

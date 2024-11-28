@@ -3,6 +3,7 @@ package create
 import (
 	"github.com/Igorezka/shortener/internal/app/config"
 	"github.com/Igorezka/shortener/internal/app/http-server/handlers/url/create/mocks"
+	"github.com/Igorezka/shortener/internal/app/lib/cipher"
 	"github.com/go-resty/resty/v2"
 	"github.com/lithammer/shortuuid"
 	"github.com/stretchr/testify/assert"
@@ -72,10 +73,11 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			store := mocks.NewURLSaver(t)
+			c, _ := cipher.New()
 			if tt.want.code != http.StatusBadRequest {
-				store.On("SaveURL", mock.Anything, tt.request.body).Return(shortuuid.New(), nil)
+				store.On("SaveURL", mock.Anything, tt.request.body, "").Return(shortuuid.New(), nil)
 			}
-			handler := New(cfg, store)
+			handler := New(cfg, c, store)
 			srv := httptest.NewServer(handler)
 			defer srv.Close()
 

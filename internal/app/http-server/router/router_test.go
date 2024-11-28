@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/Igorezka/shortener/internal/app/config"
 	"github.com/Igorezka/shortener/internal/app/http-server/router/mocks"
+	"github.com/Igorezka/shortener/internal/app/lib/cipher"
 	"github.com/Igorezka/shortener/internal/app/storage"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/go-resty/resty/v2"
@@ -143,7 +144,8 @@ func TestNew(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			store := mocks.NewStorage(t)
 			log := zap.NewNop()
-			router := New(log, cfg, store)
+			c, _ := cipher.New()
+			router := New(log, cfg, store, c)
 			srv := httptest.NewServer(router)
 			defer srv.Close()
 
@@ -154,7 +156,7 @@ func TestNew(t *testing.T) {
 				} else if tt.req.contentType == "application/json" {
 					tt.req.body = `{"url":"` + url + `"}`
 				}
-				store.On("SaveURL", mock.Anything, url).Return(shortuuid.New(), nil)
+				store.On("SaveURL", mock.Anything, url, mock.Anything).Return(shortuuid.New(), nil)
 			}
 
 			if tt.req.method == http.MethodGet && tt.want.code == http.StatusTemporaryRedirect {

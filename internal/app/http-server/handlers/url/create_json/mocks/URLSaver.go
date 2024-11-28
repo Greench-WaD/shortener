@@ -13,9 +13,9 @@ type URLSaver struct {
 	mock.Mock
 }
 
-// SaveURL provides a mock function with given fields: ctx, url
-func (_m *URLSaver) SaveURL(ctx context.Context, url string) (string, error) {
-	ret := _m.Called(ctx, url)
+// SaveURL provides a mock function with given fields: ctx, url, userID
+func (_m *URLSaver) SaveURL(ctx context.Context, url string, userID string) (string, error) {
+	ret := _m.Called(ctx, url, userID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SaveURL")
@@ -23,17 +23,17 @@ func (_m *URLSaver) SaveURL(ctx context.Context, url string) (string, error) {
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
-		return rf(ctx, url)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (string, error)); ok {
+		return rf(ctx, url, userID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) string); ok {
-		r0 = rf(ctx, url)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) string); ok {
+		r0 = rf(ctx, url, userID)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, url)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, url, userID)
 	} else {
 		r1 = ret.Error(1)
 	}

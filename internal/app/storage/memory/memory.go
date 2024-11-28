@@ -17,6 +17,7 @@ type Link struct {
 	UUID        string `json:"uuid"`
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
+	UserID      string
 }
 
 type Storage struct {
@@ -78,12 +79,13 @@ func New(fileName string) (*Storage, error) {
 	return s, nil
 }
 
-func (s *Storage) SaveURL(ctx context.Context, link string) (string, error) {
+func (s *Storage) SaveURL(ctx context.Context, link string, userID string) (string, error) {
 	const op = "storage.memory.SaveURL"
 	l := Link{
 		UUID:        strconv.Itoa(s.pointer),
 		ShortURL:    shortuuid.New(),
 		OriginalURL: link,
+		UserID:      userID,
 	}
 	s.links = append(s.links, l)
 	if s.encoder != nil {
@@ -106,11 +108,15 @@ func (s *Storage) GetURL(ctx context.Context, id string) (string, error) {
 	return s.links[idx].OriginalURL, nil
 }
 
+func (s *Storage) GetUserURLS(ctx context.Context, baseURL string, userID string) ([]models.UserBatchLink, error) {
+	return []models.UserBatchLink{}, nil
+}
+
 func (s *Storage) CheckConnect(ctx context.Context) error {
 	return nil
 }
 
-func (s *Storage) SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest) ([]models.BatchLinkResponse, error) {
+func (s *Storage) SaveBatchURL(ctx context.Context, baseURL string, batch []models.BatchLinkRequest, userID string) ([]models.BatchLinkResponse, error) {
 	const op = "storage.memory.SaveBatchURL"
 
 	var links []Link
@@ -121,6 +127,7 @@ func (s *Storage) SaveBatchURL(ctx context.Context, baseURL string, batch []mode
 			UUID:        strconv.Itoa(s.pointer),
 			ShortURL:    id,
 			OriginalURL: b.OriginalURL,
+			UserID:      userID,
 		})
 		res = append(res, models.BatchLinkResponse{
 			CorrelationID: b.CorrelationID,
