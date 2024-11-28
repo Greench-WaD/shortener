@@ -156,7 +156,7 @@ func TestNew(t *testing.T) {
 				} else if tt.req.contentType == "application/json" {
 					tt.req.body = `{"url":"` + url + `"}`
 				}
-				store.On("SaveURL", mock.Anything, url, "").Return(shortuuid.New(), nil)
+				store.On("SaveURL", mock.Anything, url, mock.Anything).Return(shortuuid.New(), nil)
 			}
 
 			if tt.req.method == http.MethodGet && tt.want.code == http.StatusTemporaryRedirect {
